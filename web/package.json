@@ -1,0 +1,46 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev -n ingestion_sources_notifications_jobs",
+    "ingest:seed": "tsx src/ingest/seedSources.ts",
+    "ingest:worker": "tsx src/ingest/worker.ts",
+    "ingest:schedule:once": "tsx src/ingest/scheduleOnce.ts",
+    "ingest:normalize": "tsx src/ingest/normalizeRun.ts",
+    "ingest:dev": "tsx src/ingest/devRun.ts",
+    "test:ingest": "tsx --test src/ingest/__tests__/*.test.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.17.1",
+    "axios": "^1.13.5",
+    "bullmq": "^5.69.3",
+    "cheerio": "^1.2.0",
+    "ioredis": "^5.9.3",
+    "next": "16.1.6",
+    "p-limit": "^7.3.0",
+    "pdf-parse": "^2.4.5",
+    "playwright": "^1.58.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "prisma": "^6.17.1",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}

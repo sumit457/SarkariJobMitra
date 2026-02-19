@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Source {
+  id            String   @id @default(cuid())
+  key           String   @unique // "ssc_nic_notices" | "ssc_gov_noticeboard" | "indiapost_vacancies" | "indiapost_gds"
+  name          String
+  listingUrl    String
+  type          String   // "listing_html" | "listing_table" | "single_page"
+  isActive      Boolean  @default(true)
+  lastCheckedAt DateTime?
+  etag          String?
+  lastHash      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  notifications RawNotification[]
+}
+
+model RawNotification {
+  id           String   @id @default(cuid())
+  sourceId     String
+  source       Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  title        String
+  publishedOn  DateTime?
+  detailUrl    String?
+  pdfUrl       String?
+  applyUrl     String?
+  canonicalKey String   @unique // stable dedupe key
+  pdfSha256    String?
+  pdfBytes     Int?
+  storagePath  String?  // local path or object key
+  pdfTextExtracted Boolean @default(false)
+  pdfText       String?
+  officialPageUrl String?
+  fetchedAt    DateTime @default(now())
+  processedAt  DateTime?
+  status       String   @default("new") // new|downloaded|processed|error
+  error        String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  job          Job?
+
+  @@index([sourceId])
+  @@index([status])
+  @@index([fetchedAt])
+}
+
+model Job {
+  id                      String          @id @default(cuid())
+  sourceNotificationId    String          @unique
+  sourceNotification      RawNotification @relation(fields: [sourceNotificationId], references: [id], onDelete: Cascade)
+
+  organization            String // "SSC" | "India Post"
+  examName                String
+  titleRaw                String
+  notificationPdfUrl      String?
+  title                   String
+  slug                    String          @unique
+  publishedOn             DateTime?
+
+  // Legacy/compat fields kept so current UI can stay unchanged.
+  category                String? // e.g., "Recruitment"|"Result"|"Admit Card"
+  state                   String?
+  applyStart              DateTime?
+  applyEnd                DateTime?
+  vacancies               Int?
+  officialNotificationUrl String?
+  applyOnlineUrl          String?
+  shortSummary            String?
+  status                  String          @default("active") // active|expired|upcoming|unknown
+
+  details                 JobDetails?
+  links                   JobLink[]
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([organization])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model JobLink {
+  id        String @id @default(cuid())
+  jobId     String
+  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  kind      String // "apply" | "notification" | "correction" | "district_vacancy" | "result" | "admit_card" | "answer_key"
+  label     String
+  url       String
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([jobId])
+  @@index([kind])
+}
+
+model JobDetails {
+  id        String @id @default(cuid())
+  jobId     String @unique
+  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  applyBegin     DateTime?
+  applyLastDate  DateTime?
+  feeLastDate    DateTime?
+  correctionFrom DateTime?
+  correctionTo   DateTime?
+
+  feeGeneral     Int?
+  feeObc         Int?
+  feeScSt        Int?
+  feePh          Int?
+  feeFemale      Int?
+  feeNote        String?
+
+  ageMin         Int?
+  ageMax         Int?
+  ageAsOn        DateTime?
+
+  vacancyTotal   Int?
+  shortSummary   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
