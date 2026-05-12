@@ -1,4 +1,15 @@
-const OFFICIAL_DOMAINS = ["ssc.nic.in", "ssc.gov.in", "indiapost.gov.in", "cept.gov.in"];
+const OFFICIAL_DOMAINS = [
+  "ssc.nic.in",
+  "ssc.gov.in",
+  "indiapost.gov.in",
+  "cept.gov.in",
+  "upsc.gov.in",
+  "upsconline.nic.in",
+  "sbi.bank.in",
+  "recruitment.sbi.bank.in",
+  "ibpsreg.ibps.in",
+  "ibpsonline.ibps.in",
+];
 
 function cleanCandidateUrl(raw: string) {
   return raw
@@ -50,8 +61,18 @@ export function filterOfficialUrls(urls: string[]) {
 }
 
 export function extractUrlsFromText(text: string) {
-  const matches = text.match(/https?:\/\/[^\s"'<>]+/gi) ?? [];
-  return filterOfficialUrls(matches);
+  const strictMatches = text.match(/https?:\/\/[^\s"'<>]+/gi) ?? [];
+  const bareOfficialMatches =
+    text.match(
+      /\b(?:https?:\/\/)?(?:www\.)?(?:ssc\.nic\.in|ssc\.gov\.in|indiapost\.gov\.in|cept\.gov\.in|upsc\.gov\.in|upsconline\.nic\.in|sbi\.bank\.in|recruitment\.sbi\.bank\.in|ibpsreg\.ibps\.in|ibpsonline\.ibps\.in)(?:\/[^\s"'<>]*)?/gi,
+    ) ?? [];
+
+  const normalizedCandidates = [...strictMatches, ...bareOfficialMatches].map((candidate) => {
+    if (/^https?:\/\//i.test(candidate)) return candidate;
+    return `https://${candidate.replace(/^\/+/, "")}`;
+  });
+
+  return filterOfficialUrls(normalizedCandidates);
 }
 
 export function officialDomainsAllowlist() {

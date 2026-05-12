@@ -14,6 +14,10 @@ celery = Celery(
 celery.conf.timezone = "Asia/Kolkata"
 
 celery.conf.beat_schedule = {
+    "crawl-due-sources-10-min": {
+        "task": "app.tasks.crawl_tasks.crawl_due_sources",
+        "schedule": 10 * 60,
+    },
     "archive-old-jobs-daily-legacy": {
         "task": "app.tasks.maintenance_tasks.archive_old_jobs",
         "schedule": 24 * 60 * 60,

@@ -1,0 +1,8 @@
+ALTER TABLE "JobDetails"
+  ADD COLUMN IF NOT EXISTS "positionName" TEXT,
+  ADD COLUMN IF NOT EXISTS "department" TEXT,
+  ADD COLUMN IF NOT EXISTS "placeOfPosting" TEXT,
+  ADD COLUMN IF NOT EXISTS "qualification" TEXT,
+  ADD COLUMN IF NOT EXISTS "payScale" TEXT,
+  ADD COLUMN IF NOT EXISTS "examCentres" TEXT,
+  ADD COLUMN IF NOT EXISTS "categoryVacancy" JSONB;

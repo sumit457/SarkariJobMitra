@@ -44,6 +44,7 @@ export default async function JobDetailsPage({ params }: Props) {
   let apiNotification = "";
   let apiOpeningDate = "";
   let apiClosingDate = "";
+  let apiExamDate = "";
   let apiOrganization = "";
   let apiVacancy = "";
   let apiSalary = "";
@@ -53,7 +54,15 @@ export default async function JobDetailsPage({ params }: Props) {
   let apiExamCenters = "";
   let apiApplicationFee = "";
   let apiCategory = "";
+  let apiDepartment = "";
+  let apiPlaceOfPosting = "";
+  let apiCategoryVacancy: Array<{ key: string; value: string }> = [];
   let apiNoticeUrl = "";
+  let apiIsUpdated = false;
+  let apiUpdatedFields = "";
+  let apiLatestNoticeTitle = "";
+  let apiLatestNoticeUrl = "";
+  let apiLatestNoticeDate = "";
 
   try {
     const apiJob = await fetchJob(id);
@@ -64,6 +73,7 @@ export default async function JobDetailsPage({ params }: Props) {
       apiNoticeUrl = apiJob.notice_url || "";
       apiOpeningDate = formatDateLabel(apiJob.opening_date);
       apiClosingDate = formatDateLabel(apiJob.closing_date);
+      apiExamDate = formatDateLabel(apiJob.exam_date);
       apiOrganization = apiJob.organization || "";
       apiVacancy = apiJob.vacancy_count ? String(apiJob.vacancy_count) : "";
       apiSalary = apiJob.salary || "";
@@ -73,6 +83,27 @@ export default async function JobDetailsPage({ params }: Props) {
       apiExamCenters = apiJob.exam_centers || "";
       apiApplicationFee = apiJob.application_fee || "";
       apiCategory = apiJob.category || "";
+      apiDepartment = apiJob.department || "";
+      apiPlaceOfPosting = apiJob.place_of_posting || "";
+      if (apiJob.category_vacancy) {
+        const categoryMap = apiJob.category_vacancy;
+        const ordered: Array<[string, string]> = [
+          ["General", String(categoryMap.general ?? "")],
+          ["OBC", String(categoryMap.obc ?? "")],
+          ["SC", String(categoryMap.sc ?? "")],
+          ["ST", String(categoryMap.st ?? "")],
+          ["EWS", String(categoryMap.ews ?? "")],
+          ["Total", String(categoryMap.total ?? "")],
+        ];
+        apiCategoryVacancy = ordered
+          .filter(([, value]) => value && value !== "null" && value !== "undefined")
+          .map(([key, value]) => ({ key, value }));
+      }
+      apiIsUpdated = Boolean(apiJob.is_updated);
+      apiUpdatedFields = (apiJob.updated_fields || []).join(", ");
+      apiLatestNoticeTitle = apiJob.latest_notice_title || "";
+      apiLatestNoticeUrl = apiJob.latest_notice_pdf_url || apiJob.latest_notice_detail_url || "";
+      apiLatestNoticeDate = apiJob.latest_notice_date ? formatDateLabel(apiJob.latest_notice_date) : "";
     }
   } catch {
     // Keep local fallback details when API is unavailable.
@@ -83,6 +114,30 @@ export default async function JobDetailsPage({ params }: Props) {
   const pageTitle = details.title || baseTitle;
   const applyLink = pickFirstValidUrl([apiApply, details.officialApplyLink, apiNoticeUrl], apiNoticeUrl);
   const notificationLink = pickFirstValidUrl([apiNotification, details.officialNotificationLink, apiNoticeUrl], apiNoticeUrl);
+  const eligibilityItems =
+    apiQualification || apiAgeLimit || apiPlaceOfPosting
+      ? [
+          ...(apiQualification ? [{ label: "Minimum Qualification", value: apiQualification }] : []),
+          ...(apiAgeLimit ? [{ label: "Age Limit", value: apiAgeLimit }] : []),
+          ...(apiPlaceOfPosting ? [{ label: "Place Of Posting", value: apiPlaceOfPosting }] : []),
+        ]
+      : details.eligibility;
+  const salaryItems =
+    apiSalary || apiPayLevel
+      ? [
+          ...(apiSalary ? [{ label: "Pay Scale", value: apiSalary }] : []),
+          ...(apiPayLevel ? [{ label: "Pay Level", value: apiPayLevel }] : []),
+        ]
+      : details.salary;
+  const examCentreItems = apiExamCenters
+    ? apiExamCenters
+        .split(/[,;/\n]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : apiPlaceOfPosting
+      ? [apiPlaceOfPosting]
+      : details.examCentres;
+  const categoryVacancyItems = apiCategoryVacancy.length > 0 ? apiCategoryVacancy : details.categoryVacancy;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -127,11 +182,11 @@ export default async function JobDetailsPage({ params }: Props) {
               <dl className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between gap-3">
                   <dt className="font-semibold text-slate-700">Job Name</dt>
-                  <dd className="text-right text-slate-900">{details.title}</dd>
+                  <dd className="text-right text-slate-900">{pageTitle}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="font-semibold text-slate-700">Department</dt>
-                  <dd className="text-right text-slate-900">{apiOrganization || details.departmentName}</dd>
+                  <dd className="text-right text-slate-900">{apiDepartment || apiOrganization || details.departmentName}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="font-semibold text-slate-700">Total Vacancy</dt>
@@ -139,7 +194,7 @@ export default async function JobDetailsPage({ params }: Props) {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="font-semibold text-slate-700">Exam Agency</dt>
-                  <dd className="text-right text-slate-900">{details.examAgency}</dd>
+                  <dd className="text-right text-slate-900">{apiOrganization || details.examAgency}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="font-semibold text-slate-700">Government Level</dt>
@@ -165,6 +220,10 @@ export default async function JobDetailsPage({ params }: Props) {
                   <dt className="font-semibold text-slate-700">Closing Date</dt>
                   <dd className="text-right text-slate-900">{apiClosingDate || details.closingDate}</dd>
                 </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="font-semibold text-slate-700">Exam Date</dt>
+                  <dd className="text-right text-slate-900">{apiExamDate || details.examDate || "Not decided yet"}</dd>
+                </div>
                 {apiApplicationFee ? (
                   <div className="flex justify-between gap-3">
                     <dt className="font-semibold text-slate-700">Application Fee</dt>
@@ -174,6 +233,26 @@ export default async function JobDetailsPage({ params }: Props) {
               </dl>
 
               <div className="mt-5 space-y-2">
+                {apiIsUpdated ? (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    <div className="font-semibold">Updated from latest SSC notice</div>
+                    <div>
+                      {apiUpdatedFields ? `Changed fields: ${apiUpdatedFields}` : "A new official update is available."}
+                      {apiLatestNoticeDate ? ` (${apiLatestNoticeDate})` : ""}
+                    </div>
+                    {apiLatestNoticeTitle && apiLatestNoticeUrl ? (
+                      <a
+                        href={apiLatestNoticeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block underline"
+                      >
+                        {apiLatestNoticeTitle}
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {notificationLink ? (
                   <a
                     href={notificationLink}
@@ -210,22 +289,8 @@ export default async function JobDetailsPage({ params }: Props) {
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-lg font-bold text-slate-900">Eligibility Criteria</h2>
-              {apiQualification || apiAgeLimit ? (
-                <ul className="mb-3 space-y-2 text-sm text-slate-800">
-                  {apiQualification ? (
-                    <li className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                      <span className="font-semibold">Qualification:</span> {apiQualification}
-                    </li>
-                  ) : null}
-                  {apiAgeLimit ? (
-                    <li className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                      <span className="font-semibold">Age Limit:</span> {apiAgeLimit}
-                    </li>
-                  ) : null}
-                </ul>
-              ) : null}
               <ul className="mt-3 space-y-2 text-sm text-slate-800">
-                {details.eligibility.map((item) => (
+                {eligibilityItems.map((item) => (
                   <li key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                     <span className="font-semibold">{item.label}:</span> {item.value}
                   </li>
@@ -235,22 +300,8 @@ export default async function JobDetailsPage({ params }: Props) {
 
             <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-lg font-bold text-slate-900">Salary Details</h2>
-              {apiSalary || apiPayLevel ? (
-                <ul className="mb-3 space-y-2 text-sm text-slate-800">
-                  {apiSalary ? (
-                    <li className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                      <span className="font-semibold">Salary:</span> {apiSalary}
-                    </li>
-                  ) : null}
-                  {apiPayLevel ? (
-                    <li className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                      <span className="font-semibold">Pay Level:</span> {apiPayLevel}
-                    </li>
-                  ) : null}
-                </ul>
-              ) : null}
               <ul className="mt-3 space-y-2 text-sm text-slate-800">
-                {details.salary.map((item) => (
+                {salaryItems.map((item) => (
                   <li key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                     <span className="font-semibold">{item.label}:</span> {item.value}
                   </li>
@@ -262,13 +313,8 @@ export default async function JobDetailsPage({ params }: Props) {
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-lg font-bold text-slate-900">Exam Centres</h2>
-              {apiExamCenters ? (
-                <p className="mb-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800">
-                  {apiExamCenters}
-                </p>
-              ) : null}
               <div className="mt-3 flex flex-wrap gap-2">
-                {details.examCentres.map((centre) => (
+                {examCentreItems.map((centre) => (
                   <span key={centre} className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm text-slate-800">
                     {centre}
                   </span>
@@ -279,7 +325,7 @@ export default async function JobDetailsPage({ params }: Props) {
             <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h2 className="text-lg font-bold text-slate-900">Category Wise Vacancy</h2>
               <ul className="mt-3 space-y-2 text-sm text-slate-800">
-                {details.categoryVacancy.map((item) => (
+                {categoryVacancyItems.map((item) => (
                   <li key={item.key} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
                     <span className="font-semibold">{item.key}</span>
                     <span>{item.value}</span>

@@ -1,7 +1,8 @@
 import { normalizeLatest } from "./normalize";
 
 async function main() {
-  const result = await normalizeLatest(200);
+  const force = process.argv.includes("--force");
+  const result = await normalizeLatest(200, { force });
   console.log("[ingest] normalize result:", result);
 }
 

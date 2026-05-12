@@ -14,6 +14,7 @@
     "ingest:worker": "tsx src/ingest/worker.ts",
     "ingest:schedule:once": "tsx src/ingest/scheduleOnce.ts",
     "ingest:normalize": "tsx src/ingest/normalizeRun.ts",
+    "ingest:backfill:jobs": "tsx src/ingest/backfillJobs.ts",
     "ingest:dev": "tsx src/ingest/devRun.ts",
     "test:ingest": "tsx --test src/ingest/__tests__/*.test.ts"
   },

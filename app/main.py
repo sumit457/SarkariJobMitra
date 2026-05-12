@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.db.session import SessionLocal
 from app.core.security import hash_password
 from app.models.admin_user import AdminUser
+from app.services.source_registry import seed_default_sources
 
 from app.api.routes.auth import router as auth_router
 from app.api.routes.public_jobs import router as jobs_router
@@ -68,5 +69,6 @@ def seed_admin():
                 )
             )
             db.commit()
+        seed_default_sources(db)
     finally:
         db.close()

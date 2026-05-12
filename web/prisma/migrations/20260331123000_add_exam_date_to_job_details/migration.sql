@@ -1,0 +1,2 @@
+ALTER TABLE "JobDetails"
+  ADD COLUMN IF NOT EXISTS "examDate" TIMESTAMP(3);

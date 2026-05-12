@@ -1,0 +1,20 @@
+ALTER TABLE "RawNotification"
+  ADD COLUMN IF NOT EXISTS "extractedDocType" TEXT,
+  ADD COLUMN IF NOT EXISTS "extractionConfidence" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "extractionModel" TEXT,
+  ADD COLUMN IF NOT EXISTS "extractionPromptVersion" TEXT,
+  ADD COLUMN IF NOT EXISTS "extractionBasis" JSONB,
+  ADD COLUMN IF NOT EXISTS "ruleExtracted" JSONB,
+  ADD COLUMN IF NOT EXISTS "llmRawResponse" TEXT,
+  ADD COLUMN IF NOT EXISTS "llmNormalized" JSONB,
+  ADD COLUMN IF NOT EXISTS "mergedExtracted" JSONB,
+  ADD COLUMN IF NOT EXISTS "validationWarnings" JSONB,
+  ADD COLUMN IF NOT EXISTS "extractedAt" TIMESTAMP(3);
+
+ALTER TABLE "JobDetails"
+  ADD COLUMN IF NOT EXISTS "docType" TEXT,
+  ADD COLUMN IF NOT EXISTS "isNewJob" BOOLEAN,
+  ADD COLUMN IF NOT EXISTS "canonicalTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "shortTitle" TEXT,
+  ADD COLUMN IF NOT EXISTS "relatedJobHint" TEXT,
+  ADD COLUMN IF NOT EXISTS "extractionConfidence" DOUBLE PRECISION;

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from urllib.parse import urljoin
 
 import httpx
@@ -8,6 +9,7 @@ from bs4 import BeautifulSoup
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
+_FAILED_FETCH_URLS: set[str] = set()
 
 _APPLY_KEYWORDS = (
     "apply",
@@ -27,14 +29,23 @@ _NOTICE_KEYWORDS = (
 
 
 @retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=6),
+    stop=stop_after_attempt(4),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
     retry=retry_if_exception_type(httpx.HTTPError),
     reraise=True,
 )
 def _download_html(url: str) -> str:
-    timeout = httpx.Timeout(connect=8.0, read=20.0, write=8.0, pool=8.0)
-    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+    timeout = httpx.Timeout(connect=15.0, read=30.0, write=15.0, pool=15.0)
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+    }
+    with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         res = client.get(url)
         res.raise_for_status()
         return res.text
@@ -82,10 +93,20 @@ def extract_official_links_from_notice(notice_url: str) -> dict[str, str | None]
     if not _is_web_url(notice_url):
         return {"official_apply_url": None, "official_notification_pdf_url": None}
 
+    # If list parser already gave us a direct PDF notice, avoid extra HTML fetch entirely.
+    if re.search(r"\.pdf($|\?)", notice_url, re.I):
+        return {"official_apply_url": None, "official_notification_pdf_url": notice_url}
+
     try:
         html = _download_html(notice_url)
-    except Exception:
-        logger.exception("failed to fetch notice page for link extraction", extra={"notice_url": notice_url})
+    except Exception as exc:
+        # Keep enrichment resilient: transient network errors should not flood logs.
+        if notice_url not in _FAILED_FETCH_URLS:
+            logger.warning(
+                "notice link extraction skipped due to fetch failure",
+                extra={"notice_url": notice_url, "error": str(exc)},
+            )
+            _FAILED_FETCH_URLS.add(notice_url)
         return {"official_apply_url": None, "official_notification_pdf_url": None}
 
     soup = BeautifulSoup(html, "lxml")
@@ -112,4 +133,3 @@ def extract_official_links_from_notice(notice_url: str) -> dict[str, str | None]
         "official_apply_url": best_apply[1] or None,
         "official_notification_pdf_url": best_notice[1] or None,
     }
-

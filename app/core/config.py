@@ -13,5 +13,9 @@ class Settings(BaseSettings):
 
     ADMIN_SEED_EMAIL: str = "admin@example.com"
     ADMIN_SEED_PASSWORD: str = "ChangeThis123!"
+    ENABLE_NOTICE_CLASSIFIER: bool = True
+    ENABLE_FIELD_CANDIDATES: bool = True
+    ENABLE_AUTO_PUBLISH: bool = False
+    ENABLE_SOURCE_HEALTH: bool = True
 
 settings = Settings()

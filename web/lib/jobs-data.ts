@@ -27,6 +27,7 @@ export type JobDetail = {
   level: string;
   openingDate: string;
   closingDate: string;
+  examDate?: string;
   eligibility: JobSection[];
   salary: JobSection[];
   examCentres: string[];
@@ -328,6 +329,7 @@ export function buildGenericJobDetail(id: string, title: string): JobDetail {
     level: "To be announced",
     openingDate: "Not decided yet",
     closingDate: "Not decided yet",
+    examDate: "Not decided yet",
     eligibility: [
       { label: "Minimum Qualification", value: "Not decided yet" },
       { label: "Age Limit", value: "Not decided yet" },

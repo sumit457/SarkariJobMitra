@@ -4,4 +4,8 @@ export type ParsedNotificationItem = {
   pdfUrl?: string;
   publishedOn?: Date;
   applyUrl?: string;
+  examId?: string;
+  sourceOpenDate?: Date;
+  sourceCloseDate?: Date;
+  sourceSession?: string;
 };

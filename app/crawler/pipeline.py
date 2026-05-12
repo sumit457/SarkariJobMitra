@@ -7,6 +7,7 @@ from app.models.raw_item import RawItem
 from app.models.job import Job
 from app.models.dedupe_key import JobDedupeKey
 from app.models.audit_log import AuditLog
+from app.services.job_lifecycle import compute_job_status
 
 def sha256(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -19,8 +20,11 @@ def make_slug(title: str, suffix: str) -> str:
 
 def upsert_raw_item(db: Session, source_id, title: str, url: str, published_date_raw: str | None):
     h = sha256(norm_title(title) + "|" + url)
+    url_hash = sha256(url)
     raw = RawItem(source_id=source_id, title_raw=title, url_raw=url,
-                  published_date_raw=published_date_raw, content_hash=h)
+                  raw_title=title, raw_url=url, published_date_raw=published_date_raw,
+                  content_hash=h, url_hash=url_hash,
+                  first_seen_at=datetime.now(timezone.utc), last_seen_at=datetime.now(timezone.utc))
     db.add(raw)
     try:
         db.commit()
@@ -30,6 +34,10 @@ def upsert_raw_item(db: Session, source_id, title: str, url: str, published_date
         db.rollback()
         # already exists
         existing = db.scalar(select(RawItem).where(RawItem.source_id == source_id, RawItem.content_hash == h))
+        if existing:
+            existing.last_seen_at = datetime.now(timezone.utc)
+            db.add(existing)
+            db.commit()
         return existing, False
 
 def find_job_by_key(db: Session, key_type: str, key_value: str) -> Job | None:
@@ -58,16 +66,29 @@ def create_job_draft(
         notice_url=notice_url,
         notification_pdf_url=pdf_url,  # ✅ store pdf if it is pdf
         official_notification_pdf_url=pdf_url,
+        official_pdf_url=pdf_url,
+        official_notification_url=notice_url,
         organization=organization,
         category=category,
         state=state,
         status="draft",
+        notice_type="new_job",
+        verification_status="unverified",
         is_active=True,
         important_dates_json={"uploaded_date": published_date_raw} if published_date_raw else {}
     )
     db.add(job)
     db.commit()
     db.refresh(job)
+
+    # Make crawled jobs visible in active feeds immediately based on available dates.
+    old_status = job.status
+    old_active = job.is_active
+    compute_job_status(job)
+    if job.status != old_status or job.is_active != old_active:
+        db.add(job)
+        db.commit()
+        db.refresh(job)
 
     # dedupe keys
     db.add(JobDedupeKey(job_id=job.id, key_type="notice_url", key_value=notice_url))

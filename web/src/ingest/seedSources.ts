@@ -10,14 +10,14 @@ async function main() {
         name: source.name,
         listingUrl: source.listingUrl,
         type: source.type,
-        isActive: true,
+        isActive: source.isActive ?? true,
       },
       create: {
         key: source.key,
         name: source.name,
         listingUrl: source.listingUrl,
         type: source.type,
-        isActive: true,
+        isActive: source.isActive ?? true,
       },
     });
   }

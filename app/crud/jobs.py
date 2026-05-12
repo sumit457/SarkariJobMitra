@@ -10,10 +10,15 @@ from app.models.job import Job
 
 
 def list_published(db: Session, limit: int = 50) -> list[Job]:
+    today = date.today()
     stmt = (
         select(Job)
         .where(Job.status == "published")
-        .order_by(desc(Job.published_at), desc(Job.created_at))
+        .where(Job.is_duplicate.is_(False))
+        .where(Job.notice_type == "new_job")
+        .where(Job.verification_status.in_(["official_verified", "reviewed"]))
+        .where(or_(Job.application_end_date.is_(None), Job.application_end_date >= today))
+        .order_by(desc(Job.published_at), desc(Job.priority), Job.application_end_date.asc().nulls_last())
         .limit(limit)
     )
     return list(db.scalars(stmt))
@@ -24,9 +29,22 @@ def _active_windows():
     grace_cutoff = today - timedelta(days=5)
     fresh_undated_cutoff = datetime.now(timezone.utc) - timedelta(days=120)
 
-    active_date_window = and_(Job.closing_date.is_not(None), Job.closing_date >= grace_cutoff)
-    recent_undated_window = and_(Job.closing_date.is_(None), Job.created_at >= fresh_undated_cutoff)
+    public_deadline = func.coalesce(Job.application_end_date, Job.closing_date)
+    active_date_window = and_(public_deadline.is_not(None), public_deadline >= grace_cutoff)
+    recent_undated_window = and_(public_deadline.is_(None), Job.created_at >= fresh_undated_cutoff)
     return active_date_window, recent_undated_window
+
+
+def _apply_public_card_filters(stmt):
+    today = date.today()
+    public_deadline = func.coalesce(Job.application_end_date, Job.closing_date)
+    return (
+        stmt.where(Job.status == "published")
+        .where(Job.is_duplicate.is_(False))
+        .where(Job.notice_type == "new_job")
+        .where(Job.verification_status.in_(["official_verified", "reviewed"]))
+        .where(or_(public_deadline.is_(None), public_deadline >= today))
+    )
 
 
 def _apply_common_filters(
@@ -40,7 +58,9 @@ def _apply_common_filters(
 ):
     active_date_window, recent_undated_window = _active_windows()
 
-    if active_only:
+    if status is None:
+        stmt = _apply_public_card_filters(stmt)
+    elif active_only:
         stmt = stmt.where(or_(active_date_window, recent_undated_window))
     if state:
         stmt = stmt.where(Job.state == state)
@@ -87,12 +107,21 @@ def _order_by_business_priority(stmt):
 
     event_date = func.coalesce(
         Job.opening_date,
+        Job.application_start_date,
+        Job.application_end_date,
         Job.closing_date,
         cast(Job.published_at, Date),
         cast(Job.created_at, Date),
     )
 
-    return stmt.order_by(priority.asc(), desc(event_date), desc(Job.created_at))
+    return stmt.order_by(
+        desc(Job.published_at),
+        desc(Job.priority),
+        priority.asc(),
+        Job.application_end_date.asc().nulls_last(),
+        desc(event_date),
+        desc(Job.created_at),
+    )
 
 
 def list_jobs(

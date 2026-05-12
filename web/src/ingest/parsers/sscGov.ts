@@ -36,7 +36,24 @@ function toSscGovAttachmentUrl(pathValue?: string | null) {
 }
 
 export const SSC_GOV_NOTICE_API_URL =
-  "https://ssc.gov.in/api/general-website/portal/records?page=1&limit=50&contentType=notice-boards&key=createdAt&order=DESC&pageType=filter&isAttachment=true&attributes=id,headline,examId,contentType,redirectUrl,startDate,endDate,language,createdAt&queryKey=startDate,endDate&queryValue=undefined,undefined&customKey=createdAt&exams=false&date=false&language=english";
+  // SSC API currently rejects limit > 100. Keep at 100 to fetch the broadest set in one call.
+  "https://ssc.gov.in/api/general-website/portal/records?page=1&limit=100&contentType=notice-boards&key=createdAt&order=DESC&pageType=filter&isAttachment=true&attributes=id,headline,examId,contentType,redirectUrl,startDate,endDate,language,createdAt&queryKey=startDate,endDate&queryValue=undefined,undefined&customKey=createdAt&exams=false&date=false&language=english";
+
+export const SSC_GOV_CALENDAR_API_URL =
+  // NOTE: limit must be <= 100, otherwise SSC returns an error payload with no rows.
+  "https://ssc.gov.in/api/general-website/portal/records?page=1&limit=100&contentType=ssc-calendar&key=createdAt&order=DESC&pageType=filter&isAttachment=true&attributes=id,headline,examId,contentType,redirectUrl,startDate,endDate,language,createdAt&queryKey=startDate,endDate&queryValue=undefined,undefined&customKey=createdAt&exams=false&date=false&language=english";
+
+const SSC_CALENDAR_SOURCE_YEARS = new Set(
+  (process.env.SSC_CALENDAR_SOURCE_YEARS ?? "2025,2026")
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value)),
+);
+
+function calendarSessionFromYear(year?: number) {
+  if (!year || !Number.isFinite(year)) return undefined;
+  return `${year}-${String((year + 1) % 100).padStart(2, "0")}`;
+}
 
 export function parseSscGovNoticeBoard(html: string, baseUrl: string) {
   const $ = cheerio.load(html);
@@ -105,6 +122,7 @@ export function parseSscGovNoticeBoardApiPayload(payloadText: string) {
       title,
       pdfUrl,
       detailUrl,
+      examId: String(row.examId ?? "").trim() || undefined,
       publishedOn: parseDate(String(row.createdAt ?? "")) ?? parseDate(String(row.startDate ?? "")),
     });
   }
@@ -112,6 +130,55 @@ export function parseSscGovNoticeBoardApiPayload(payloadText: string) {
   const seen = new Set<string>();
   return items.filter((it) => {
     const key = `${it.title}::${it.detailUrl ?? ""}::${it.pdfUrl ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function parseSscGovCalendarApiPayload(payloadText: string) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(payloadText);
+  } catch {
+    return [] as ParsedNotificationItem[];
+  }
+
+  const data = (parsed as { data?: Array<Record<string, unknown>> } | null)?.data;
+  if (!Array.isArray(data)) return [] as ParsedNotificationItem[];
+
+  const fallbackDetailUrl = "https://ssc.gov.in/for-candidates/examination-calendar";
+  const items: ParsedNotificationItem[] = [];
+
+  for (const row of data) {
+    const title = String(row.headline ?? "").trim().replace(/\s+/g, " ");
+    if (!title) continue;
+
+    const createdAt = parseDate(String(row.createdAt ?? ""));
+    const createdYear = createdAt?.getUTCFullYear();
+    if (SSC_CALENDAR_SOURCE_YEARS.size > 0 && createdYear && !SSC_CALENDAR_SOURCE_YEARS.has(createdYear)) {
+      continue;
+    }
+
+    const redirectUrl = String(row.redirectUrl ?? "").trim();
+    const detailUrl = redirectUrl ? abs("https://ssc.gov.in", redirectUrl) ?? fallbackDetailUrl : fallbackDetailUrl;
+    const sourceOpenDate = parseDate(String(row.startDate ?? ""));
+    const sourceCloseDate = parseDate(String(row.endDate ?? ""));
+
+    items.push({
+      title,
+      detailUrl,
+      examId: String(row.examId ?? "").trim() || undefined,
+      publishedOn: createdAt ?? sourceOpenDate,
+      sourceOpenDate,
+      sourceCloseDate,
+      sourceSession: calendarSessionFromYear(createdYear),
+    });
+  }
+
+  const seen = new Set<string>();
+  return items.filter((it) => {
+    const key = `${it.examId ?? ""}::${it.title}::${it.sourceSession ?? ""}::${it.sourceOpenDate?.toISOString() ?? ""}::${it.sourceCloseDate?.toISOString() ?? ""}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

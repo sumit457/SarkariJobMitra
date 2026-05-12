@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 import io
 import logging
+import os
 import re
 from typing import Iterable
 
@@ -20,6 +21,7 @@ except Exception:  # pragma: no cover - optional import guard
     PdfReader = None
 
 logger = logging.getLogger(__name__)
+_FAILED_PDF_URLS: set[str] = set()
 
 _DATE_TOKEN_RE = re.compile(r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{4})\b")
 _URL_RE = re.compile(r"https?://[^\s)\]>'\"]+", re.IGNORECASE)
@@ -36,8 +38,26 @@ class PDFDownloadError(Exception):
     reraise=True,
 )
 def _download_pdf_bytes(url: str) -> bytes:
-    timeout = httpx.Timeout(connect=8.0, read=20.0, write=8.0, pool=8.0)
-    with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+    connect_timeout = float(os.getenv("PDF_CONNECT_TIMEOUT_SECONDS", "15"))
+    read_timeout = float(os.getenv("PDF_READ_TIMEOUT_SECONDS", "45"))
+    write_timeout = float(os.getenv("PDF_WRITE_TIMEOUT_SECONDS", "15"))
+    pool_timeout = float(os.getenv("PDF_POOL_TIMEOUT_SECONDS", "15"))
+    timeout = httpx.Timeout(
+        connect=connect_timeout,
+        read=read_timeout,
+        write=write_timeout,
+        pool=pool_timeout,
+    )
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/pdf,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+    }
+    with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as client:
         response = client.get(url)
         response.raise_for_status()
 
@@ -80,8 +100,11 @@ def extract_text_from_pdf(url: str) -> str:
     """
     try:
         pdf_bytes = _download_pdf_bytes(url)
-    except Exception:
-        logger.exception("failed to download PDF", extra={"url": url})
+    except Exception as exc:
+        # Keep enrichment resilient and avoid repeated noisy traces for the same dead URL.
+        if url not in _FAILED_PDF_URLS:
+            logger.warning("failed to download PDF", extra={"url": url, "error": str(exc)})
+            _FAILED_PDF_URLS.add(url)
         return ""
 
     text = _extract_text_pdfplumber(pdf_bytes)

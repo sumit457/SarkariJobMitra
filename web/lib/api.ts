@@ -2,6 +2,7 @@ export type Job = {
   id: string;
   slug?: string | null;
   title: string;
+  exam_id?: string | null;
   organization?: string | null;
   category?: string | null;
   state?: string | null;
@@ -14,21 +15,35 @@ export type Job = {
   official_notification_pdf_url?: string | null;
   opening_date?: string | null;
   closing_date?: string | null;
+  exam_date?: string | null;
   vacancy_count?: number | null;
   salary?: string | null;
   pay_level?: string | null;
   age_limit?: string | null;
   qualification?: string | null;
   exam_centers?: string | null;
+  department?: string | null;
+  place_of_posting?: string | null;
+  category_vacancy?: Record<string, number | null> | null;
   application_fee?: string | null;
   short_description?: string | null;
   detailed_description?: string | null;
   is_verified?: boolean;
   confidence_score?: number | null;
+  is_updated?: boolean;
+  updated_fields?: string[];
+  latest_notice_title?: string | null;
+  latest_notice_pdf_url?: string | null;
+  latest_notice_detail_url?: string | null;
+  latest_notice_date?: string | null;
   published_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
+
+export type JobHomeSectionKey = "upcoming" | "active" | "deadline-over" | "admit-card" | "result";
+
+export type JobHomeSections = Record<JobHomeSectionKey, Job[]>;
 
 type FetchJobsParams = {
   limit?: number;
@@ -43,6 +58,7 @@ type FetchJobsParams = {
 type JobsListApiRow = {
   id: string;
   slug: string;
+  examId?: string | null;
   organization: string;
   examName?: string | null;
   title?: string | null;
@@ -52,6 +68,7 @@ type JobsListApiRow = {
   applyStart?: string | null;
   applyEnd?: string | null;
   applyLastDate?: string | null;
+  examDate?: string | null;
   vacancyTotal?: number | null;
   vacancies?: number | null;
   shortSummary?: string | null;
@@ -61,6 +78,15 @@ type JobsListApiRow = {
   applyUrlPrimary?: string | null;
   publishedOn?: string | null;
   updatedAt?: string | null;
+  hasUpdates?: boolean;
+  latestUpdateNotice?: {
+    title: string;
+    pdfUrl?: string | null;
+    detailUrl?: string | null;
+    publishedOn?: string | null;
+    fetchedAt?: string | null;
+    updateTypes?: string[];
+  } | null;
 };
 
 type JobsDetailApiLink = {
@@ -73,6 +99,7 @@ type JobsDetailApiLink = {
 type JobsDetailApiDetails = {
   applyBegin?: string | null;
   applyLastDate?: string | null;
+  examDate?: string | null;
   feeLastDate?: string | null;
   correctionFrom?: string | null;
   correctionTo?: string | null;
@@ -86,6 +113,20 @@ type JobsDetailApiDetails = {
   ageMax?: number | null;
   ageAsOn?: string | null;
   vacancyTotal?: number | null;
+  positionName?: string | null;
+  department?: string | null;
+  placeOfPosting?: string | null;
+  qualification?: string | null;
+  payScale?: string | null;
+  examCentres?: string | null;
+  categoryVacancy?: {
+    general?: number | null;
+    obc?: number | null;
+    sc?: number | null;
+    st?: number | null;
+    ews?: number | null;
+    total?: number | null;
+  } | null;
   shortSummary?: string | null;
 };
 
@@ -97,11 +138,21 @@ type JobsDetailApiResponse = {
   links: JobsDetailApiLink[];
   details?: JobsDetailApiDetails | null;
   source?: {
+    examId?: string | null;
     publishedOn?: string | null;
+  } | null;
+  hasUpdates?: boolean;
+  latestUpdateNotice?: {
+    title: string;
+    pdfUrl?: string | null;
+    detailUrl?: string | null;
+    publishedOn?: string | null;
+    fetchedAt?: string | null;
+    updateTypes?: string[];
   } | null;
 };
 
-const ACTIVE_CYCLE_YEARS = new Set([2025, 2026]);
+const ACTIVE_CYCLE_YEARS = new Set([2025, 2026, 2027]);
 
 function serverBaseUrl() {
   const port = process.env.PORT || "3000";
@@ -188,6 +239,7 @@ function toJobFromList(row: JobsListApiRow): Job {
     id: row.id,
     slug: row.slug,
     title: row.examName || row.title || "Job Update",
+    exam_id: row.examId || null,
     organization: row.organization || null,
     category: row.category || null,
     state: row.state || null,
@@ -200,8 +252,15 @@ function toJobFromList(row: JobsListApiRow): Job {
     official_notification_pdf_url: notification || null,
     opening_date: row.applyStart || null,
     closing_date: row.applyLastDate || row.applyEnd || null,
+    exam_date: row.examDate || null,
     vacancy_count: row.vacancyTotal ?? row.vacancies ?? null,
     short_description: row.shortSummary || null,
+    is_updated: Boolean(row.hasUpdates),
+    updated_fields: row.latestUpdateNotice?.updateTypes || [],
+    latest_notice_title: row.latestUpdateNotice?.title || null,
+    latest_notice_pdf_url: row.latestUpdateNotice?.pdfUrl || null,
+    latest_notice_detail_url: row.latestUpdateNotice?.detailUrl || null,
+    latest_notice_date: row.latestUpdateNotice?.publishedOn || row.latestUpdateNotice?.fetchedAt || null,
     published_at: row.publishedOn || row.updatedAt || null,
     created_at: row.updatedAt || null,
     updated_at: row.updatedAt || null,
@@ -233,6 +292,7 @@ function toJobFromDetails(detail: JobsDetailApiResponse): Job {
     id: detail.slug,
     slug: detail.slug,
     title: detail.examName,
+    exam_id: detail.source?.examId || null,
     organization: detail.organization,
     status: "active",
     is_active: true,
@@ -243,10 +303,23 @@ function toJobFromDetails(detail: JobsDetailApiResponse): Job {
     official_notification_pdf_url: notification || null,
     opening_date: detail.details?.applyBegin || null,
     closing_date: detail.details?.applyLastDate || null,
+    exam_date: detail.details?.examDate || null,
     vacancy_count: detail.details?.vacancyTotal ?? null,
+    department: detail.details?.department || null,
+    place_of_posting: detail.details?.placeOfPosting || null,
     age_limit: age,
+    qualification: detail.details?.qualification || null,
+    salary: detail.details?.payScale || null,
+    exam_centers: detail.details?.examCentres || detail.details?.placeOfPosting || null,
+    category_vacancy: detail.details?.categoryVacancy || null,
     application_fee: fee,
     short_description: detail.details?.shortSummary || null,
+    is_updated: Boolean(detail.hasUpdates),
+    updated_fields: detail.latestUpdateNotice?.updateTypes || [],
+    latest_notice_title: detail.latestUpdateNotice?.title || null,
+    latest_notice_pdf_url: detail.latestUpdateNotice?.pdfUrl || null,
+    latest_notice_detail_url: detail.latestUpdateNotice?.detailUrl || null,
+    latest_notice_date: detail.latestUpdateNotice?.publishedOn || detail.latestUpdateNotice?.fetchedAt || null,
     published_at: detail.source?.publishedOn || null,
     created_at: null,
     updated_at: null,
@@ -375,4 +448,119 @@ export function sortJobsLatest(jobs: Job[]): Job[] {
     const timeB = new Date(b.published_at || b.opening_date || b.created_at || 0).getTime() || 0;
     return timeB - timeA;
   });
+}
+
+function normalizeCategory(category?: string | null) {
+  return (category ?? "").trim().toLowerCase();
+}
+
+function parseDateMs(value?: string | null) {
+  if (!value) return null;
+  const ms = new Date(value).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function compareDateAsc(left?: string | null, right?: string | null) {
+  const leftMs = parseDateMs(left);
+  const rightMs = parseDateMs(right);
+  if (leftMs === null && rightMs === null) return 0;
+  if (leftMs === null) return 1;
+  if (rightMs === null) return -1;
+  return leftMs - rightMs;
+}
+
+function compareDateDesc(left?: string | null, right?: string | null) {
+  return compareDateAsc(right, left);
+}
+
+function latestSortTimestamp(job: Job) {
+  return parseDateMs(job.published_at) ?? parseDateMs(job.opening_date) ?? parseDateMs(job.created_at) ?? 0;
+}
+
+export function isRecruitmentJob(job: Job) {
+  const category = normalizeCategory(job.category);
+  return category === "" || category === "recruitment";
+}
+
+export function isAdmitCardJob(job: Job) {
+  return normalizeCategory(job.category) === "admit card";
+}
+
+export function isResultJob(job: Job) {
+  return normalizeCategory(job.category) === "result";
+}
+
+export function getRecruitmentSection(job: Job, now = new Date()): Extract<JobHomeSectionKey, "upcoming" | "active" | "deadline-over"> | null {
+  if (!isRecruitmentJob(job)) return null;
+
+  const nowMs = now.getTime();
+  const openingMs = parseDateMs(job.opening_date);
+  const closingMs = parseDateMs(job.closing_date);
+
+  if (job.status === "upcoming") return "upcoming";
+  if (job.status === "expired") return "deadline-over";
+  if (openingMs !== null && openingMs > nowMs) return "upcoming";
+  if (closingMs !== null && closingMs < nowMs) return "deadline-over";
+  return "active";
+}
+
+export function sortUpcomingJobs(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    const openingCmp = compareDateAsc(a.opening_date, b.opening_date);
+    if (openingCmp !== 0) return openingCmp;
+    return latestSortTimestamp(b) - latestSortTimestamp(a);
+  });
+}
+
+export function sortApplyNowJobs(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    const deadlineCmp = compareDateAsc(a.closing_date, b.closing_date);
+    if (deadlineCmp !== 0) return deadlineCmp;
+    const openingCmp = compareDateDesc(a.opening_date, b.opening_date);
+    if (openingCmp !== 0) return openingCmp;
+    return latestSortTimestamp(b) - latestSortTimestamp(a);
+  });
+}
+
+export function sortDeadlineOverJobs(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => {
+    const closedCmp = compareDateDesc(a.closing_date, b.closing_date);
+    if (closedCmp !== 0) return closedCmp;
+    return latestSortTimestamp(b) - latestSortTimestamp(a);
+  });
+}
+
+export function buildJobHomeSections(jobs: Job[], now = new Date()): JobHomeSections {
+  const sections: JobHomeSections = {
+    upcoming: [],
+    active: [],
+    "deadline-over": [],
+    "admit-card": [],
+    result: [],
+  };
+
+  for (const job of jobs) {
+    if (isAdmitCardJob(job)) {
+      sections["admit-card"].push(job);
+      continue;
+    }
+
+    if (isResultJob(job)) {
+      sections.result.push(job);
+      continue;
+    }
+
+    const recruitmentSection = getRecruitmentSection(job, now);
+    if (recruitmentSection) {
+      sections[recruitmentSection].push(job);
+    }
+  }
+
+  return {
+    upcoming: sortUpcomingJobs(sections.upcoming),
+    active: sortApplyNowJobs(sections.active),
+    "deadline-over": sortDeadlineOverJobs(sections["deadline-over"]),
+    "admit-card": sortJobsLatest(sections["admit-card"]),
+    result: sortJobsLatest(sections.result),
+  };
 }

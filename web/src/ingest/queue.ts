@@ -57,6 +57,32 @@ async function queueDownloadBatch(limit = 100) {
   return { queued: raws.length };
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function ingestSourceWithRetry(sourceKey: string) {
+  const maxAttempts = Math.max(Number(process.env.INGEST_RETRY_ATTEMPTS ?? 2), 1);
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const result = await ingestSource(sourceKey);
+      return { ok: true, attempt, result };
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) {
+        const delayMs = Math.min(1500 * attempt, 4000);
+        await sleep(delayMs);
+      }
+    }
+  }
+
+  return {
+    ok: false,
+    attempt: maxAttempts,
+    error: String((lastError as Error)?.message ?? lastError ?? "unknown_error"),
+  };
+}
+
 export async function startWorker() {
   const concurrency = Number(process.env.INGEST_CONCURRENCY ?? 3);
 
@@ -65,13 +91,13 @@ export async function startWorker() {
     async (job) => {
       if (job.name === "ingest-source") {
         const { sourceKey } = job.data as { sourceKey: string };
-        return ingestSource(sourceKey);
+        return ingestSourceWithRetry(sourceKey);
       }
 
       if (job.name === "ingest-cycle") {
         const results: Array<{ sourceKey: string; result: unknown }> = [];
         for (const source of DEFAULT_SOURCES) {
-          const result = await ingestSource(source.key);
+          const result = await ingestSourceWithRetry(source.key);
           results.push({ sourceKey: source.key, result });
         }
 

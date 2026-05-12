@@ -8,68 +8,73 @@ datasource db {
 }
 
 model Source {
-  id            String   @id @default(cuid())
-  key           String   @unique // "ssc_nic_notices" | "ssc_gov_noticeboard" | "indiapost_vacancies" | "indiapost_gds"
+  id            String            @id @default(cuid())
+  key           String            @unique
   name          String
   listingUrl    String
-  type          String   // "listing_html" | "listing_table" | "single_page"
-  isActive      Boolean  @default(true)
+  type          String
+  isActive      Boolean           @default(true)
   lastCheckedAt DateTime?
   etag          String?
   lastHash      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   notifications RawNotification[]
 }
 
 model RawNotification {
-  id           String   @id @default(cuid())
-  sourceId     String
-  source       Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-
-  title        String
-  publishedOn  DateTime?
-  detailUrl    String?
-  pdfUrl       String?
-  applyUrl     String?
-  canonicalKey String   @unique // stable dedupe key
-  pdfSha256    String?
-  pdfBytes     Int?
-  storagePath  String?  // local path or object key
-  pdfTextExtracted Boolean @default(false)
-  pdfText       String?
-  officialPageUrl String?
-  fetchedAt    DateTime @default(now())
-  processedAt  DateTime?
-  status       String   @default("new") // new|downloaded|processed|error
-  error        String?
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  job          Job?
+  id                      String    @id @default(cuid())
+  sourceId                String
+  title                   String
+  publishedOn             DateTime?
+  detailUrl               String?
+  pdfUrl                  String?
+  applyUrl                String?
+  canonicalKey            String    @unique
+  pdfSha256               String?
+  pdfBytes                Int?
+  storagePath             String?
+  fetchedAt               DateTime  @default(now())
+  processedAt             DateTime?
+  status                  String    @default("new")
+  error                   String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  officialPageUrl         String?
+  pdfText                 String?
+  pdfTextExtracted        Boolean   @default(false)
+  examId                  String?
+  sourceOpenDate          DateTime?
+  sourceCloseDate         DateTime?
+  sourceSession           String?
+  extractedDocType        String?
+  extractionConfidence    Float?
+  extractionModel         String?
+  extractionPromptVersion String?
+  extractionBasis         Json?
+  ruleExtracted           Json?
+  llmRawResponse          String?
+  llmNormalized           Json?
+  mergedExtracted         Json?
+  validationWarnings      Json?
+  extractedAt             DateTime?
+  job                     Job?
+  source                  Source    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@index([sourceId])
   @@index([status])
   @@index([fetchedAt])
+  @@index([examId])
+  @@index([sourceSession])
 }
 
 model Job {
   id                      String          @id @default(cuid())
   sourceNotificationId    String          @unique
-  sourceNotification      RawNotification @relation(fields: [sourceNotificationId], references: [id], onDelete: Cascade)
-
-  organization            String // "SSC" | "India Post"
-  examName                String
-  titleRaw                String
-  notificationPdfUrl      String?
+  organization            String
   title                   String
   slug                    String          @unique
-  publishedOn             DateTime?
-
-  // Legacy/compat fields kept so current UI can stay unchanged.
-  category                String? // e.g., "Recruitment"|"Result"|"Admit Card"
+  category                String?
   state                   String?
   applyStart              DateTime?
   applyEnd                DateTime?
@@ -77,13 +82,16 @@ model Job {
   officialNotificationUrl String?
   applyOnlineUrl          String?
   shortSummary            String?
-  status                  String          @default("active") // active|expired|upcoming|unknown
-
+  status                  String          @default("active")
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  examName                String
+  titleRaw                String
+  notificationPdfUrl      String?
+  publishedOn             DateTime?
+  sourceNotification      RawNotification @relation(fields: [sourceNotificationId], references: [id], onDelete: Cascade)
   details                 JobDetails?
   links                   JobLink[]
-
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
 
   @@index([organization])
   @@index([status])
@@ -91,46 +99,92 @@ model Job {
 }
 
 model JobLink {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   jobId     String
-  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  kind      String // "apply" | "notification" | "correction" | "district_vacancy" | "result" | "admit_card" | "answer_key"
+  kind      String
   label     String
   url       String
-  isPrimary Boolean @default(false)
-
+  isPrimary Boolean  @default(false)
   createdAt DateTime @default(now())
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@index([jobId])
   @@index([kind])
 }
 
 model JobDetails {
-  id        String @id @default(cuid())
-  jobId     String @unique
-  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  id                   String           @id @default(cuid())
+  jobId                String           @unique
+  applyBegin           DateTime?
+  applyLastDate        DateTime?
+  feeLastDate          DateTime?
+  correctionFrom       DateTime?
+  correctionTo         DateTime?
+  feeGeneral           Int?
+  feeObc               Int?
+  feeScSt              Int?
+  feePh                Int?
+  feeFemale            Int?
+  feeNote              String?
+  ageMin               Int?
+  ageMax               Int?
+  ageAsOn              DateTime?
+  vacancyTotal         Int?
+  shortSummary         String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  positionName         String?
+  department           String?
+  placeOfPosting       String?
+  qualification        String?
+  payScale             String?
+  examCentres          String?
+  categoryVacancy      Json?
+  examDate             DateTime?
+  docType              String?
+  isNewJob             Boolean?
+  canonicalTitle       String?
+  shortTitle           String?
+  relatedJobHint       String?
+  extractionConfidence Float?
+  candidates           FieldCandidate[]
+  conflicts            FieldConflict[]
+  job                  Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
 
-  applyBegin     DateTime?
-  applyLastDate  DateTime?
-  feeLastDate    DateTime?
-  correctionFrom DateTime?
-  correctionTo   DateTime?
+model FieldCandidate {
+  id             String     @id @default(cuid())
+  jobDetailsId   String
+  fieldName      String
+  candidateValue Json
+  sourceType     String
+  sourceUrl      String?
+  confidence     Float      @default(0.75)
+  extractedAt    DateTime
+  createdAt      DateTime   @default(now())
+  jobDetails     JobDetails @relation(fields: [jobDetailsId], references: [id], onDelete: Cascade)
 
-  feeGeneral     Int?
-  feeObc         Int?
-  feeScSt        Int?
-  feePh          Int?
-  feeFemale      Int?
-  feeNote        String?
+  @@index([jobDetailsId])
+  @@index([fieldName])
+  @@index([sourceType])
+}
 
-  ageMin         Int?
-  ageMax         Int?
-  ageAsOn        DateTime?
+model FieldConflict {
+  id           String     @id @default(cuid())
+  jobDetailsId String
+  fieldName    String
+  sourceA      String
+  valueA       Json
+  sourceB      String
+  valueB       Json
+  conflictType String     @default("mismatch")
+  resolved     Boolean    @default(false)
+  resolution   Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  jobDetails   JobDetails @relation(fields: [jobDetailsId], references: [id], onDelete: Cascade)
 
-  vacancyTotal   Int?
-  shortSummary   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@index([jobDetailsId])
+  @@index([fieldName])
+  @@index([resolved])
 }
