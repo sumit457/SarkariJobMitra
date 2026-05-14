@@ -1,13 +1,4 @@
-export type SourceKey =
-  | "ssc_nic_notices"
-  | "ssc_gov_noticeboard"
-  | "ssc_gov_calendar"
-  | "sbi_current_openings"
-  | "indiapost_vacancies"
-  | "indiapost_gds"
-  | "upsc_active_exams"
-  | "upsc_forthcoming_exams"
-  | "upsc_exam_calendar";
+export type SourceKey = string;
 
 export const DEFAULT_SOURCES: Array<{
   key: SourceKey;
@@ -71,5 +62,287 @@ export const DEFAULT_SOURCES: Array<{
     name: "UPSC Exam Calendar",
     listingUrl: "https://upsc.gov.in/examinations/exam-calendar",
     type: "listing_table",
+  },
+  {
+    key: "rrb_apply",
+    name: "Railway Recruitment Boards Central Apply",
+    listingUrl: "https://www.rrbapply.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "rrb_chandigarh",
+    name: "RRB Chandigarh",
+    listingUrl: "https://www.rrbcdg.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "rbi_opportunities",
+    name: "RBI Opportunities",
+    listingUrl: "https://opportunities.rbi.org.in/",
+    type: "listing_html",
+  },
+  {
+    key: "ibps_current",
+    name: "IBPS Current Openings",
+    listingUrl: "https://www.ibps.in/current-openings/",
+    type: "listing_html",
+  },
+  {
+    key: "nabard_career",
+    name: "NABARD Career Notices",
+    listingUrl: "https://www.nabard.org/careers-notices.aspx",
+    type: "listing_html",
+  },
+  {
+    key: "join_indian_army",
+    name: "Join Indian Army",
+    listingUrl: "https://joinindianarmy.nic.in/",
+    type: "listing_html",
+  },
+  {
+    key: "join_indian_navy",
+    name: "Join Indian Navy",
+    listingUrl: "https://www.joinindiannavy.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "afcat",
+    name: "Indian Air Force AFCAT",
+    listingUrl: "https://afcat.cdac.in/AFCAT/",
+    type: "listing_html",
+  },
+  {
+    key: "agnipath_vayu",
+    name: "Agnipath Vayu",
+    listingUrl: "https://agnipathvayu.cdac.in/",
+    type: "listing_html",
+  },
+  {
+    key: "bsf_recruitment",
+    name: "BSF Recruitment",
+    listingUrl: "https://rectt.bsf.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "crpf_recruitment",
+    name: "CRPF Recruitment",
+    listingUrl: "https://rect.crpf.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "cisf_recruitment",
+    name: "CISF Recruitment",
+    listingUrl: "https://cisfrectt.cisf.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "itbp_recruitment",
+    name: "ITBP Recruitment",
+    listingUrl: "https://recruitment.itbpolice.nic.in/",
+    type: "listing_html",
+  },
+  {
+    key: "nta_recruitment",
+    name: "NTA Recruitment",
+    listingUrl: "https://recruitment.nta.nic.in/",
+    type: "listing_html",
+  },
+  {
+    key: "kvs_recruitment",
+    name: "KVS Recruitment",
+    listingUrl: "https://kvsangathan.nic.in/recruitment/",
+    type: "listing_html",
+  },
+  {
+    key: "nvs_recruitment",
+    name: "NVS Recruitment",
+    listingUrl: "https://navodaya.gov.in/nvs/en/Recruitment/",
+    type: "listing_html",
+  },
+  {
+    key: "aiims_exams",
+    name: "AIIMS Exams",
+    listingUrl: "https://www.aiimsexams.ac.in/",
+    type: "listing_html",
+  },
+  {
+    key: "esic_recruitments",
+    name: "ESIC Recruitments",
+    listingUrl: "https://www.esic.gov.in/recruitments",
+    type: "listing_html",
+  },
+  {
+    key: "apprenticeship_india",
+    name: "Apprenticeship India",
+    listingUrl: "https://www.apprenticeshipindia.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "nats_apprenticeship",
+    name: "NATS Apprenticeship",
+    listingUrl: "https://nats.education.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "ongc_careers",
+    name: "ONGC Careers",
+    listingUrl: "https://ongcindia.com/web/eng/career/recruitment-notice",
+    type: "listing_html",
+  },
+  {
+    key: "iocl_careers",
+    name: "IOCL Careers",
+    listingUrl: "https://iocl.com/latest-job-opening",
+    type: "listing_html",
+  },
+  {
+    key: "bhel_careers",
+    name: "BHEL Careers",
+    listingUrl: "https://careers.bhel.in/",
+    type: "listing_html",
+  },
+  {
+    key: "sail_careers",
+    name: "SAIL Careers",
+    listingUrl: "https://sailcareers.com/",
+    type: "listing_html",
+  },
+  {
+    key: "ntpc_careers",
+    name: "NTPC Careers",
+    listingUrl: "https://careers.ntpc.co.in/",
+    type: "listing_html",
+  },
+  {
+    key: "coal_india_careers",
+    name: "Coal India Careers",
+    listingUrl: "https://www.coalindia.in/career-cil/",
+    type: "listing_html",
+  },
+  {
+    key: "supreme_court_recruitment",
+    name: "Supreme Court of India Recruitment",
+    listingUrl: "https://www.sci.gov.in/recruitments/",
+    type: "listing_html",
+  },
+  {
+    key: "allahabad_high_court_recruitment",
+    name: "Allahabad High Court Recruitment",
+    listingUrl: "https://www.allahabadhighcourt.in/event/recruitment.jsp",
+    type: "listing_html",
+  },
+  {
+    key: "patna_high_court_recruitment",
+    name: "Patna High Court Recruitment",
+    listingUrl: "https://patnahighcourt.gov.in/Recruitments.aspx",
+    type: "listing_html",
+  },
+  {
+    key: "uppsc",
+    name: "UPPSC Recruitment",
+    listingUrl: "https://uppsc.up.nic.in/",
+    type: "listing_html",
+  },
+  {
+    key: "upsssc",
+    name: "UPSSSC",
+    listingUrl: "https://upsssc.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "uppbpb",
+    name: "UP Police Recruitment Board",
+    listingUrl: "https://uppbpb.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "up_basic_education",
+    name: "UP Basic Education Recruitment",
+    listingUrl: "https://upbasiceduboard.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "bpsc",
+    name: "BPSC",
+    listingUrl: "https://bpsc.bihar.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "bihar_csbc",
+    name: "Bihar Police CSBC",
+    listingUrl: "https://csbc.bihar.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "btsc_bihar",
+    name: "BTSC Bihar",
+    listingUrl: "https://btsc.bihar.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "bssc",
+    name: "BSSC",
+    listingUrl: "https://bssc.bihar.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "jpsc",
+    name: "JPSC",
+    listingUrl: "https://www.jpsc.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "jssc",
+    name: "JSSC",
+    listingUrl: "https://jssc.jharkhand.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "rpsc",
+    name: "RPSC",
+    listingUrl: "https://rpsc.rajasthan.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "rssb",
+    name: "Rajasthan Staff Selection Board",
+    listingUrl: "https://rssb.rajasthan.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "hpsc",
+    name: "HPSC",
+    listingUrl: "https://hpsc.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "hssc",
+    name: "HSSC",
+    listingUrl: "https://hssc.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "ukpsc",
+    name: "UKPSC",
+    listingUrl: "https://psc.uk.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "uksssc",
+    name: "UKSSSC",
+    listingUrl: "https://sssc.uk.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "hppsc",
+    name: "HPPSC",
+    listingUrl: "https://www.hppsc.hp.gov.in/",
+    type: "listing_html",
+  },
+  {
+    key: "jkssb",
+    name: "JKSSB",
+    listingUrl: "https://jkssb.nic.in/",
+    type: "listing_html",
   },
 ];

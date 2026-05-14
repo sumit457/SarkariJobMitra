@@ -8,6 +8,7 @@ import { prisma } from "@/src/lib/prisma";
 import { downloadBinary, fetchTextWithOptionalFallback } from "./http";
 import { parseIndiaPostGds } from "./parsers/indiaPostGds";
 import { parseIndiaPostVacancies } from "./parsers/indiaPostVacancies";
+import { parseGenericOfficialNotices } from "./parsers/genericOfficial";
 import {
   parseSscGovCalendarApiPayload,
   parseSscGovNoticeBoard,
@@ -62,7 +63,7 @@ function parseItemsBySource(sourceKey: string, html: string, baseUrl: string) {
   if (sourceKey === "upsc_forthcoming_exams") return parseUpscForthcomingExams(html, baseUrl);
   if (sourceKey === "upsc_exam_calendar") return parseUpscExamCalendar(html, baseUrl);
   if (sourceKey === "sbi_current_openings") return parseSbiCurrentOpenings(html, baseUrl);
-  return [];
+  return parseGenericOfficialNotices(html, baseUrl);
 }
 
 function abs(base: string, href?: string | null) {

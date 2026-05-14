@@ -7,6 +7,8 @@ const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434"
 const LLM_EXTRACTOR_MODEL = process.env.LLM_EXTRACTOR_MODEL ?? "qwen2.5:7b";
 const LLM_EXTRACTOR_TIMEOUT_MS = Number(process.env.LLM_EXTRACTOR_TIMEOUT_MS ?? "120000");
 const LLM_EXTRACTOR_MAX_CHARS = Number(process.env.LLM_EXTRACTOR_MAX_CHARS ?? "24000");
+const LLM_EXTRACTOR_NUM_CTX = Number(process.env.LLM_EXTRACTOR_NUM_CTX ?? "32768");
+const LLM_EXTRACTOR_USE_SCHEMA = process.env.LLM_EXTRACTOR_USE_SCHEMA !== "false";
 const LLM_PROMPT_VERSION = "govjobs_notice_extract_v2";
 
 export function isLlmExtractorEnabled() {
@@ -66,6 +68,98 @@ const LlmJsonSchema = z
       .optional(),
   })
   .passthrough();
+
+const NullableString = { type: ["string", "null"] };
+const NullableNumber = { type: ["number", "null"] };
+const NullableBoolean = { type: ["boolean", "null"] };
+
+const LlmStructuredOutputSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    docType: { enum: ["recruitment", "result", "admit_card", "answer_key", "corrigendum", "extension_notice", "not_relevant", null] },
+    isNewJob: NullableBoolean,
+    canonicalTitle: NullableString,
+    shortTitle: NullableString,
+    positionName: NullableString,
+    department: NullableString,
+    placeOfPosting: NullableString,
+    qualification: NullableString,
+    payScale: NullableString,
+    examCentres: NullableString,
+    shortSummary: NullableString,
+    applyBegin: NullableString,
+    applyLastDate: NullableString,
+    examDate: NullableString,
+    feeLastDate: NullableString,
+    correctionFrom: NullableString,
+    correctionTo: NullableString,
+    ageAsOn: NullableString,
+    feeGeneral: NullableNumber,
+    feeObc: NullableNumber,
+    feeScSt: NullableNumber,
+    feePh: NullableNumber,
+    feeFemale: NullableNumber,
+    ageMin: NullableNumber,
+    ageMax: NullableNumber,
+    vacancyTotal: NullableNumber,
+    officialNotificationUrl: NullableString,
+    officialApplyUrl: NullableString,
+    relatedJobHint: NullableString,
+    confidence: NullableNumber,
+    categoryVacancy: {
+      anyOf: [
+        { type: "null" },
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            general: NullableNumber,
+            obc: NullableNumber,
+            sc: NullableNumber,
+            st: NullableNumber,
+            ews: NullableNumber,
+            total: NullableNumber,
+          },
+          required: ["general", "obc", "sc", "st", "ews", "total"],
+        },
+      ],
+    },
+  },
+  required: [
+    "docType",
+    "isNewJob",
+    "canonicalTitle",
+    "shortTitle",
+    "positionName",
+    "department",
+    "placeOfPosting",
+    "qualification",
+    "payScale",
+    "examCentres",
+    "shortSummary",
+    "applyBegin",
+    "applyLastDate",
+    "examDate",
+    "feeLastDate",
+    "correctionFrom",
+    "correctionTo",
+    "ageAsOn",
+    "feeGeneral",
+    "feeObc",
+    "feeScSt",
+    "feePh",
+    "feeFemale",
+    "ageMin",
+    "ageMax",
+    "vacancyTotal",
+    "officialNotificationUrl",
+    "officialApplyUrl",
+    "relatedJobHint",
+    "confidence",
+    "categoryVacancy",
+  ],
+} as const;
 
 type ParsedLlmJson = z.infer<typeof LlmJsonSchema>;
 
@@ -371,9 +465,10 @@ export async function extractJobDetailsFromPdfTextWithLlm(params: {
       body: JSON.stringify({
         model: LLM_EXTRACTOR_MODEL,
         stream: false,
-        format: "json",
+        format: LLM_EXTRACTOR_USE_SCHEMA ? LlmStructuredOutputSchema : "json",
         options: {
           temperature: 0,
+          num_ctx: Number.isFinite(LLM_EXTRACTOR_NUM_CTX) ? LLM_EXTRACTOR_NUM_CTX : 32768,
         },
         prompt: buildPrompt({
           organization: params.organization,
