@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/src/lib/prisma";
 import { extractJobDetailsFromPdfText } from "@/src/ingest/detailsExtractor";
@@ -8,6 +9,18 @@ import { shouldExposeRecruitmentFields } from "@/src/ingest/noticeClassifier";
 export const runtime = "nodejs";
 
 const SSC_NOTICE_SOURCE_KEYS = ["ssc_gov_noticeboard"] as const;
+
+type SourceNotificationMetadata = {
+  examId?: string | null;
+  pdfText?: string | null;
+  sourceSession?: string | null;
+  sourceOpenDate?: Date | null;
+  sourceCloseDate?: Date | null;
+};
+
+function sourceNotificationMetadata<T>(notification: T): T & SourceNotificationMetadata {
+  return notification as T & SourceNotificationMetadata;
+}
 
 function coerceJobDocType(value?: string | null): JobDocType | undefined {
   return JOB_DOC_TYPES.includes(value as JobDocType) ? (value as JobDocType) : undefined;
@@ -71,16 +84,18 @@ export async function GET(_request: Request, context: Context) {
     updateTypes: string[];
   } | null = null;
 
-  if (row.sourceNotification.examId) {
+  const notificationMeta = sourceNotificationMetadata(row.sourceNotification);
+
+  if (notificationMeta.examId) {
     const latestNotice = await prisma.rawNotification.findFirst({
       where: {
-        examId: row.sourceNotification.examId,
+        examId: notificationMeta.examId,
         source: {
           key: {
             in: [...SSC_NOTICE_SOURCE_KEYS],
           },
         },
-      },
+      } as unknown as Prisma.RawNotificationWhereInput,
       orderBy: [{ fetchedAt: "desc" }],
     });
 
@@ -96,8 +111,8 @@ export async function GET(_request: Request, context: Context) {
     }
   }
 
-  const parsedPdfDetails = row.sourceNotification.pdfText
-    ? extractJobDetailsFromPdfText(row.organization, row.sourceNotification.pdfText)
+  const parsedPdfDetails = notificationMeta.pdfText
+    ? extractJobDetailsFromPdfText(row.organization, notificationMeta.pdfText)
     : undefined;
   const structuredFallback = row.organization === "SBI" ? undefined : parsedPdfDetails;
   const primaryNotificationUrl =
@@ -157,10 +172,10 @@ export async function GET(_request: Request, context: Context) {
       publishedOn: row.publishedOn,
       fetchedAt: row.sourceNotification.fetchedAt,
       pdfSha256: row.sourceNotification.pdfSha256,
-      examId: row.sourceNotification.examId,
-      sourceSession: row.sourceNotification.sourceSession,
-      sourceOpenDate: row.sourceNotification.sourceOpenDate,
-      sourceCloseDate: row.sourceNotification.sourceCloseDate,
+      examId: notificationMeta.examId,
+      sourceSession: notificationMeta.sourceSession,
+      sourceOpenDate: notificationMeta.sourceOpenDate,
+      sourceCloseDate: notificationMeta.sourceCloseDate,
     },
     hasUpdates: Boolean(latestUpdateNotice),
     latestUpdateNotice,

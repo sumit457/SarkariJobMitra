@@ -19,6 +19,14 @@ const JOB_SOURCE_KEYS = [
 
 const SSC_NOTICE_SOURCE_KEYS = ["ssc_gov_noticeboard"] as const;
 
+type SourceNotificationMetadata = {
+  examId?: string | null;
+};
+
+function sourceNotificationMetadata<T>(notification: T): T & SourceNotificationMetadata {
+  return notification as T & SourceNotificationMetadata;
+}
+
 function coerceJobDocType(value?: string | null): JobDocType | undefined {
   return JOB_DOC_TYPES.includes(value as JobDocType) ? (value as JobDocType) : undefined;
 }
@@ -93,7 +101,7 @@ export async function GET(request: Request) {
   const sscExamIds = Array.from(
     new Set(
       rows
-        .map((row) => row.sourceNotification.examId)
+        .map((row) => sourceNotificationMetadata(row.sourceNotification).examId)
         .filter((value): value is string => typeof value === "string" && value.length > 0),
     ),
   );
@@ -119,7 +127,7 @@ export async function GET(request: Request) {
             in: [...SSC_NOTICE_SOURCE_KEYS],
           },
         },
-      },
+      } as unknown as Prisma.RawNotificationWhereInput,
       orderBy: [{ fetchedAt: "desc" }],
       include: {
         source: true,
@@ -127,8 +135,9 @@ export async function GET(request: Request) {
     });
 
     for (const notice of notices) {
-      if (!notice.examId || latestNoticeByExamId.has(notice.examId)) continue;
-      latestNoticeByExamId.set(notice.examId, {
+      const noticeMeta = sourceNotificationMetadata(notice);
+      if (!noticeMeta.examId || latestNoticeByExamId.has(noticeMeta.examId)) continue;
+      latestNoticeByExamId.set(noticeMeta.examId, {
         title: notice.title,
         pdfUrl: notice.pdfUrl,
         detailUrl: notice.detailUrl,
@@ -140,6 +149,7 @@ export async function GET(request: Request) {
   }
 
   const payload = rows.map((row) => {
+    const notificationMeta = sourceNotificationMetadata(row.sourceNotification);
     const primaryNotificationUrl =
       row.links.find((link) => link.kind === "notification" && link.isPrimary)?.url ??
       row.links.find((link) => link.kind === "notification")?.url ??
@@ -152,7 +162,7 @@ export async function GET(request: Request) {
     );
 
     return {
-      examId: row.sourceNotification.examId,
+      examId: notificationMeta.examId,
       slug: row.slug,
       organization: row.organization,
       examName: row.examName,
@@ -180,9 +190,9 @@ export async function GET(request: Request) {
         null,
       status: row.status,
       updatedAt: row.updatedAt,
-      hasUpdates: Boolean(row.sourceNotification.examId && latestNoticeByExamId.has(row.sourceNotification.examId)),
-      latestUpdateNotice: row.sourceNotification.examId
-        ? latestNoticeByExamId.get(row.sourceNotification.examId) ?? null
+      hasUpdates: Boolean(notificationMeta.examId && latestNoticeByExamId.has(notificationMeta.examId)),
+      latestUpdateNotice: notificationMeta.examId
+        ? latestNoticeByExamId.get(notificationMeta.examId) ?? null
         : null,
     };
   });
