@@ -7,6 +7,8 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import Response
 from PIL import Image, ImageOps
 
+from app.core.public_limits import ensure_upload_size
+
 router = APIRouter(prefix="/image-tools", tags=["image-tools"])
 
 
@@ -195,6 +197,7 @@ async def image_resize(
     """
 
     raw = await file.read()
+    ensure_upload_size(raw)
     if not raw:
         raise HTTPException(status_code=400, detail="Empty file")
 

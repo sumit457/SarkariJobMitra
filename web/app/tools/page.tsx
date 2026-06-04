@@ -90,6 +90,28 @@ function ToolsPageContent() {
               {workspaceDark ? "☀ Light" : "🌙 Dark"}
             </button>
           </div>
+
+          <div
+            className={[
+              "mt-5 grid gap-3 rounded-3xl border p-4 text-sm shadow-sm md:grid-cols-3",
+              workspaceDark
+                ? "border-slate-800 bg-slate-950/60 text-slate-300"
+                : "border-white/70 bg-white/70 text-slate-700",
+            ].join(" ")}
+          >
+            <div>
+              <span className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>Private by default.</span>{" "}
+              Uploaded files are processed for the selected tool and are not kept as permanent storage.
+            </div>
+            <div>
+              <span className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>Safe launch limits.</span>{" "}
+              Large uploads and unusually high request volume are limited to keep the service stable.
+            </div>
+            <div>
+              <span className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>Free phase.</span>{" "}
+              This public tools version is free while the full job platform is prepared separately.
+            </div>
+          </div>
         </div>
       </header>
 

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { buildJobHomeSections, fetchJobs, fetchJobsAll, type Job, type JobHomeSectionKey } from "@/lib/api";
 import { ACTIVE_HOME_JOBS, ADMIT_CARD_ITEMS, RESULT_ITEMS } from "@/lib/jobs-data";
+import ToolsPage from "./tools/page";
 
 const BRAND = "SarkariJobMitra";
 const DEFAULT_VISIBLE_ITEMS = 20;
+const TOOLS_ONLY_PHASE = process.env.NEXT_PUBLIC_SITE_PHASE === "tools";
 
 type CardLinkItem = {
   label: string;
@@ -102,6 +104,11 @@ function buildSectionsFromJobs(jobs: Job[]): HomeSectionLinks {
 }
 
 export default function HomePage() {
+  if (TOOLS_ONLY_PHASE) return <ToolsPage />;
+  return <JobsHomePage />;
+}
+
+function JobsHomePage() {
   const [sectionLinks, setSectionLinks] = useState<HomeSectionLinks>(buildFallbackSections);
   const [searchResult, setSearchResult] = useState<{ query: string; sections: HomeSectionLinks } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");

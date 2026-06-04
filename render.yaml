@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: govjobs-tools-api
+    env: docker
+    plan: starter
+    healthCheckPath: /docs
+    autoDeploy: true
+    envVars:
+      - key: ENV
+        value: production
+      - key: PUBLIC_SITE_PHASE
+        value: tools
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: MAX_UPLOAD_MB
+        value: "25"
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: RATE_LIMIT_REQUESTS
+        value: "60"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "3600"

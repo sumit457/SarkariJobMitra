@@ -18,6 +18,8 @@ from docx.shared import Pt
 
 import pypdfium2 as pdfium
 
+from app.core.public_limits import ensure_total_upload_size, ensure_upload_size
+
 # Optional (best-effort) libraries. The service works without them, but PDF->DOCX quality
 # is significantly better when they are installed.
 try:
@@ -33,9 +35,6 @@ except Exception:  # pragma: no cover
 
 router = APIRouter(prefix="/convert", tags=["convert"])
 
-MAX_UPLOAD_MB = 25
-MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
-
 DEFAULT_RENDER_DPI = 220
 OCR_RENDER_DPI = 300  # higher DPI improves OCR quality
 
@@ -45,8 +44,7 @@ OCR_RENDER_DPI = 300  # higher DPI improves OCR quality
 # ----------------------------
 
 def _check_size(raw: bytes):
-    if len(raw) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail=f"File too large. Max {MAX_UPLOAD_MB}MB.")
+    ensure_upload_size(raw)
 
 
 def _safe_base(filename: str) -> str:
@@ -423,8 +421,7 @@ async def _images_to_pdf(files: List[UploadFile]) -> bytes:
     for f in files:
         raw = await f.read()
         total += len(raw)
-        if total > MAX_UPLOAD_BYTES:
-            raise HTTPException(status_code=413, detail=f"Total upload too large. Max {MAX_UPLOAD_MB}MB.")
+        ensure_total_upload_size(total)
         try:
             img = Image.open(io.BytesIO(raw))
             img = ImageOps.exif_transpose(img)

@@ -13,6 +13,12 @@ class Settings(BaseSettings):
 
     ADMIN_SEED_EMAIL: str = "admin@example.com"
     ADMIN_SEED_PASSWORD: str = "ChangeThis123!"
+    PUBLIC_SITE_PHASE: str = "tools"
+    CORS_ORIGINS: str = "http://localhost:3000"
+    MAX_UPLOAD_MB: int = 25
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_REQUESTS: int = 60
+    RATE_LIMIT_WINDOW_SECONDS: int = 3600
     ENABLE_NOTICE_CLASSIFIER: bool = True
     ENABLE_FIELD_CANDIDATES: bool = True
     ENABLE_AUTO_PUBLISH: bool = False

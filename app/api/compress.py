@@ -15,15 +15,13 @@ import pikepdf
 from pikepdf import Name
 from PIL import Image
 
-router = APIRouter(prefix="/compress", tags=["compress"])
+from app.core.public_limits import ensure_upload_size
 
-MAX_UPLOAD_MB = 25
-MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+router = APIRouter(prefix="/compress", tags=["compress"])
 
 
 def _check_size(raw: bytes):
-    if len(raw) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail=f"File too large. Max {MAX_UPLOAD_MB}MB.")
+    ensure_upload_size(raw)
 
 
 def _safe_base(filename: str) -> str:
