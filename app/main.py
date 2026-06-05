@@ -1,14 +1,8 @@
 from fastapi import FastAPI, Request
-from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from app.core.logging import setup_logging
 from app.core.config import settings
 from app.core.rate_limit import check_public_tool_rate_limit
-from app.db.session import SessionLocal
-from app.core.security import hash_password
-from app.models.admin_user import AdminUser
-from app.services.source_registry import seed_default_sources
 
 from app.api.image_tool import router as image_tool_router
 from app.api.convert import router as convert_router
@@ -68,6 +62,14 @@ if settings.PUBLIC_SITE_PHASE != "tools":
 def seed_admin():
     if settings.PUBLIC_SITE_PHASE == "tools":
         return
+
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+
+    from app.core.security import hash_password
+    from app.db.session import SessionLocal
+    from app.models.admin_user import AdminUser
+    from app.services.source_registry import seed_default_sources
 
     db: Session = SessionLocal()
     try:
