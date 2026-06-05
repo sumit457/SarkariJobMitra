@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ImageToolPanel from "@/components/tools/ImageToolPanel";
@@ -9,6 +10,16 @@ import CompressToolPanel from "@/components/tools/CompressToolPanel";
 type ToolKey = "image" | "convert" | "compress";
 
 const TOOL_KEYS: ToolKey[] = ["image", "convert", "compress"];
+const SEO_TOOL_LINKS = [
+  { href: "/image-tools/resize-image-to-20kb", label: "Resize Image to 20KB" },
+  { href: "/convert/pdf-to-word", label: "PDF to Word" },
+  { href: "/convert/jpg-to-pdf", label: "JPG to PDF" },
+  { href: "/convert/png-to-pdf", label: "PNG to PDF" },
+  { href: "/convert/pdf-to-jpg", label: "PDF to JPG" },
+  { href: "/convert/word-to-pdf", label: "Word to PDF" },
+  { href: "/compress/pdf", label: "PDF Compressor" },
+  { href: "/compress/word", label: "Word Compressor" },
+];
 
 function isToolKey(value: string | null): value is ToolKey {
   return value === "image" || value === "convert" || value === "compress";
@@ -112,6 +123,34 @@ function ToolsPageContent() {
               This public tools version is free while the full job platform is prepared separately.
             </div>
           </div>
+
+          <nav
+            aria-label="Popular file tools"
+            className={[
+              "mt-4 flex flex-wrap gap-2 rounded-2xl border p-3 text-sm",
+              workspaceDark
+                ? "border-slate-800 bg-slate-950/40"
+                : "border-white/70 bg-white/60",
+            ].join(" ")}
+          >
+            <span className={`mr-1 py-2 font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>
+              Popular:
+            </span>
+            {SEO_TOOL_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={[
+                  "rounded-full border px-3 py-2 font-medium transition-colors",
+                  workspaceDark
+                    ? "border-slate-700 bg-slate-900 text-slate-200 hover:border-amber-400"
+                    : "border-slate-200 bg-white text-slate-800 hover:border-amber-300",
+                ].join(" ")}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </header>
 

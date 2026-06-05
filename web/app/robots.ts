@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: ["/", "/tools", "/image-tools", "/compress", "/convert"],
         disallow: ["/jobs", "/notices", "/api/jobs", "/api/notifications"],
       },
+      sitemap: "https://www.sarkarijobmitra.com/sitemap.xml",
     };
   }
 
@@ -19,5 +20,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api"],
     },
+    sitemap: "https://www.sarkarijobmitra.com/sitemap.xml",
   };
 }

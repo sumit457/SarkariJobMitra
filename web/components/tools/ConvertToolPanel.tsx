@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type Mode =
+export type ConvertMode =
   | "pdf_to_word"
   | "word_to_pdf"
   | "pdf_to_jpg"
@@ -50,10 +50,12 @@ export default function ConvertToolPanel({
   embedded = false,
   darkOverride,
   showThemeToggle = true,
+  defaultMode = "pdf_to_word",
 }: {
   embedded?: boolean;
   darkOverride?: boolean;
   showThemeToggle?: boolean;
+  defaultMode?: ConvertMode;
 }) {
   const base = useMemo(() => (process.env.NEXT_PUBLIC_API_BASE || "").trim().replace(/\/+$/, ""), []);
   const [localDark, setLocalDark] = useState(false);
@@ -71,7 +73,7 @@ export default function ConvertToolPanel({
   }, [isDarkControlled, localDark]);
 
   // most used first
-  const [mode, setMode] = useState<Mode>("pdf_to_word");
+  const [mode, setMode] = useState<ConvertMode>(defaultMode);
 
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [fileLabel, setFileLabel] = useState("No file selected");
@@ -109,7 +111,7 @@ export default function ConvertToolPanel({
   const rootClass = embedded ? "bg-transparent" : pageBg;
   const contentClass = embedded ? "p-4 md:p-5" : "max-w-3xl mx-auto p-6";
 
-  function modeLabel(m: Mode) {
+  function modeLabel(m: ConvertMode) {
     switch (m) {
       case "pdf_to_word":
         return "PDF to Word";
@@ -134,7 +136,7 @@ export default function ConvertToolPanel({
     }
   }
 
-  function acceptForMode(m: Mode) {
+  function acceptForMode(m: ConvertMode) {
     if (m === "pdf_to_word" || m === "pdf_to_jpg" || m === "pdf_to_png") return ".pdf";
     if (m === "word_to_pdf" || m === "word_to_jpg" || m === "word_to_png") return ".docx";
     if (m === "jpg_to_pdf" || m === "jpg_to_word") return "image/jpeg,image/jpg,image/pjpeg";
@@ -142,12 +144,12 @@ export default function ConvertToolPanel({
     return "*/*";
   }
 
-  function allowMultiple(m: Mode) {
+  function allowMultiple(m: ConvertMode) {
     // allow multiple images when making a PDF (helps people combine certificate photos)
     return m === "jpg_to_pdf" || m === "png_to_pdf";
   }
 
-  function endpointForMode(m: Mode) {
+  function endpointForMode(m: ConvertMode) {
     switch (m) {
       case "pdf_to_word":
         return "/convert/pdf-to-word";
@@ -172,7 +174,7 @@ export default function ConvertToolPanel({
     }
   }
 
-  function ModeButton({ id }: { id: Mode }) {
+  function ModeButton({ id }: { id: ConvertMode }) {
     const active = mode === id;
     return (
       <button

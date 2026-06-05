@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type Mode = "pdf" | "word";
+export type CompressMode = "pdf" | "word";
 type Level = "small" | "balanced" | "high";
 
 function clamp(x: number, a: number, b: number) {
@@ -44,10 +44,12 @@ export default function CompressToolPanel({
   embedded = false,
   darkOverride,
   showThemeToggle = true,
+  defaultMode = "pdf",
 }: {
   embedded?: boolean;
   darkOverride?: boolean;
   showThemeToggle?: boolean;
+  defaultMode?: CompressMode;
 }) {
   const base = useMemo(() => (process.env.NEXT_PUBLIC_API_BASE || "").trim().replace(/\/+$/, ""), []);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -55,7 +57,7 @@ export default function CompressToolPanel({
   const [localDark, setLocalDark] = useState(false);
   const dark = darkOverride ?? localDark;
   const isDarkControlled = darkOverride !== undefined;
-  const [mode, setMode] = useState<Mode>("pdf");
+  const [mode, setMode] = useState<CompressMode>(defaultMode);
   const [level, setLevel] = useState<Level>("balanced");
 
   const [fileLabel, setFileLabel] = useState("No file selected");
@@ -102,17 +104,17 @@ export default function CompressToolPanel({
   const rootClass = embedded ? "bg-transparent" : pageBg;
   const contentClass = embedded ? "p-4 md:p-5" : "max-w-4xl mx-auto p-6";
 
-  function acceptForMode(m: Mode) {
+  function acceptForMode(m: CompressMode) {
     if (m === "pdf") return ".pdf";
     return ".docx";
   }
 
-  function endpointForMode(m: Mode) {
+  function endpointForMode(m: CompressMode) {
     if (m === "pdf") return "/compress/pdf";
     return "/compress/word";
   }
 
-  function modeLabel(m: Mode) {
+  function modeLabel(m: CompressMode) {
     return m === "pdf" ? "PDF Compressor" : "Word Compressor";
   }
 
@@ -181,7 +183,7 @@ export default function CompressToolPanel({
     }
   }
 
-  function ModeButton({ id }: { id: Mode }) {
+  function ModeButton({ id }: { id: CompressMode }) {
     const active = mode === id;
     return (
       <button

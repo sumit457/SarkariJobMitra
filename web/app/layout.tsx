@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
+const siteUrl = "https://www.sarkarijobmitra.com";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,8 +16,43 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SarkariJobMitra Tools",
-  description: "Image resize, document conversion, and PDF/Word compression tools.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "SarkariJobMitra Tools - Free Image Resize, PDF Convert and Compress",
+    template: "%s | SarkariJobMitra Tools",
+  },
+  description:
+    "Free online tools for government exam forms: resize images to exact KB, convert PDF to Word/JPG/PNG, and compress PDF or Word files.",
+  applicationName: "SarkariJobMitra Tools",
+  keywords: [
+    "image resize tool",
+    "resize image to 20KB",
+    "PDF to Word converter",
+    "PDF compressor",
+    "Word to PDF converter",
+    "government exam photo resize",
+    "sarkari form image resize",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "SarkariJobMitra Tools - Free Form File Tools",
+    description:
+      "Resize images, convert documents, and compress PDF/Word files for online exam and application forms.",
+    url: siteUrl,
+    siteName: "SarkariJobMitra Tools",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "SarkariJobMitra Tools",
+    description: "Free image resize, PDF conversion, and document compression tools.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 const cloudflareAnalyticsToken = process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
