@@ -36,7 +36,11 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function errorText(err: unknown) {
-  return err instanceof Error ? err.message : String(err);
+  const message = err instanceof Error ? err.message : String(err);
+  if (/networkerror|failed to fetch|load failed/i.test(message)) {
+    return "Could not reach the processing server. If this is the first request, wait 30-60 seconds for the free backend to wake up and try again.";
+  }
+  return message;
 }
 
 export default function ConvertToolPanel({
@@ -48,7 +52,7 @@ export default function ConvertToolPanel({
   darkOverride?: boolean;
   showThemeToggle?: boolean;
 }) {
-  const base = useMemo(() => process.env.NEXT_PUBLIC_API_BASE || "", []);
+  const base = useMemo(() => (process.env.NEXT_PUBLIC_API_BASE || "").trim().replace(/\/+$/, ""), []);
   const [localDark, setLocalDark] = useState(false);
   const dark = darkOverride ?? localDark;
   const isDarkControlled = darkOverride !== undefined;
