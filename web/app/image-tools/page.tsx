@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 
 export default function ImageToolsPage() {
   return (
-    <>
-      <BrandHeader eyebrow="Image resize tools" />
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-amber-50">
+      <BrandHeader />
       <ImageToolPanel />
       <BrandFooter />
-    </>
+    </div>
   );
 }

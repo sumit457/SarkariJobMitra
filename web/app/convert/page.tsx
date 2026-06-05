@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 
 export default function ConvertPage() {
   return (
-    <>
-      <BrandHeader eyebrow="Document converter" />
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-amber-50">
+      <BrandHeader />
       <ConvertToolPanel />
       <BrandFooter />
-    </>
+    </div>
   );
 }

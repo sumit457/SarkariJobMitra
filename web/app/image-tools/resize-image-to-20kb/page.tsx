@@ -13,11 +13,10 @@ export const metadata: Metadata = {
 
 export default function ResizeImageTo20KbPage() {
   return (
-    <>
-      <BrandHeader eyebrow="Image resize tool" />
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-amber-50">
+      <BrandHeader />
       <main>
-        <section className="mx-auto max-w-4xl px-4 pt-8 text-slate-900">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">Free image resize tool</p>
+        <section className="mx-auto mt-8 max-w-4xl rounded-3xl border border-sky-100 bg-white/75 px-5 py-6 text-slate-900 shadow-sm">
           <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Resize Image to 20KB</h1>
           <p className="mt-3 max-w-3xl text-base leading-7 text-slate-700">
             Upload a JPG, JPEG, or PNG image and resize it to exactly 20KB for online forms and exam portals.
@@ -34,6 +33,6 @@ export default function ResizeImageTo20KbPage() {
         </section>
       </main>
       <BrandFooter />
-    </>
+    </div>
   );
 }

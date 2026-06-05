@@ -60,16 +60,15 @@ export default async function CompressModePage({ params }: Props) {
   if (!tool) notFound();
 
   return (
-    <>
-      <BrandHeader eyebrow="Free online compressor" />
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-amber-50">
+      <BrandHeader />
       <main>
-        <section className="mx-auto max-w-4xl px-4 pt-8 text-slate-900">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">Free online compressor</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{tool.h1}</h1>
+        <section className="mx-auto mt-8 max-w-4xl rounded-3xl border border-sky-100 bg-white/75 px-5 py-6 text-slate-900 shadow-sm">
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{tool.h1}</h1>
           <p className="mt-3 max-w-3xl text-base leading-7 text-slate-700">{tool.intro}</p>
         </section>
         <CompressToolPanel defaultMode={tool.mode} />
-        <section className="mx-auto max-w-4xl px-4 pb-10 text-slate-800">
+        <section className="mx-auto max-w-4xl rounded-3xl border border-sky-100 bg-white/70 px-5 py-6 text-slate-800 shadow-sm">
           <h2 className="text-2xl font-semibold">Tips for smaller files</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
             {tool.tips.map((tip) => (
@@ -79,6 +78,6 @@ export default async function CompressModePage({ params }: Props) {
         </section>
       </main>
       <BrandFooter />
-    </>
+    </div>
   );
 }

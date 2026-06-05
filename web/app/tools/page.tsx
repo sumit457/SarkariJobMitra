@@ -22,6 +22,21 @@ const SEO_TOOL_LINKS = [
   { href: "/compress/word", label: "Word Compressor" },
 ];
 
+const TRUST_POINTS = [
+  {
+    title: "Private by default",
+    text: "Uploaded files are processed only for the selected tool and are not kept as permanent storage.",
+  },
+  {
+    title: "Stable public access",
+    text: "Large uploads and unusually high request volume are limited so the service remains reliable for everyone.",
+  },
+  {
+    title: "No login needed",
+    text: "Core tools are available directly while the full SarkariJobMitra job platform is prepared separately.",
+  },
+];
+
 function isToolKey(value: string | null): value is ToolKey {
   return value === "image" || value === "convert" || value === "compress";
 }
@@ -93,10 +108,7 @@ function ToolsPageContent() {
                 />
               </div>
               <div>
-                <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${workspaceDark ? "text-amber-300" : "text-amber-700"}`}>
-                  Free public tools
-                </p>
-                <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
+                <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
                   <span className={workspaceDark ? "text-slate-100" : "text-[#06255f]"}>Sarkari</span>
                   <span className={workspaceDark ? "text-sky-300" : "text-[#1f93c8]"}>Job</span>
                   <span className={workspaceDark ? "text-pink-300" : "text-[#cc4d85]"}>Mitra</span>
@@ -125,34 +137,12 @@ function ToolsPageContent() {
             </button>
           </div>
 
-          <div
-            className={[
-              "mt-5 grid gap-3 rounded-3xl border p-4 text-sm shadow-sm md:grid-cols-3",
-              workspaceDark
-                ? "border-slate-800 bg-slate-950/60 text-slate-300"
-                : "border-white/70 bg-white/70 text-slate-700",
-            ].join(" ")}
-          >
-            <div>
-              <span className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>Private by default.</span>{" "}
-              Uploaded files are processed for the selected tool and are not kept as permanent storage.
-            </div>
-            <div>
-              <span className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>Safe launch limits.</span>{" "}
-              Large uploads and unusually high request volume are limited to keep the service stable.
-            </div>
-            <div>
-              <span className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>Free phase.</span>{" "}
-              This public tools version is free while the full job platform is prepared separately.
-            </div>
-          </div>
-
           <nav
             aria-label="Popular file tools"
             className={[
-              "mt-4 flex flex-wrap gap-2 rounded-2xl border p-3 text-sm",
+              "mt-5 flex flex-wrap gap-2 rounded-2xl border p-3 text-sm",
               workspaceDark
-                ? "border-slate-800 bg-slate-950/40"
+                ? "border-slate-700 bg-slate-900/65"
                 : "border-white/70 bg-white/60",
             ].join(" ")}
           >
@@ -239,6 +229,29 @@ function ToolsPageContent() {
             })}
           </div>
         )}
+
+        <section
+          className={[
+            "mt-8 grid gap-4 rounded-3xl border p-5 shadow-sm md:grid-cols-3",
+            workspaceDark
+              ? "border-slate-800 bg-slate-900 text-slate-300"
+              : "border-sky-100 bg-gradient-to-r from-sky-50 via-white to-amber-50 text-slate-700",
+          ].join(" ")}
+          aria-label="SarkariJobMitra tool safeguards"
+        >
+          {TRUST_POINTS.map((point) => (
+            <div
+              key={point.title}
+              className={[
+                "rounded-2xl border p-4 shadow-sm",
+                workspaceDark ? "border-slate-700 bg-slate-950/30" : "border-white/70 bg-white/60",
+              ].join(" ")}
+            >
+              <h2 className={`text-sm font-bold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>{point.title}</h2>
+              <p className="mt-2 text-sm leading-6">{point.text}</p>
+            </div>
+          ))}
+        </section>
       </main>
       <footer
         className={[
