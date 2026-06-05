@@ -18,6 +18,7 @@ from docx.shared import Pt
 
 import pypdfium2 as pdfium
 
+from app.core.config import settings
 from app.core.public_limits import ensure_total_upload_size, ensure_upload_size
 
 # Optional (best-effort) libraries. The service works without them, but PDF->DOCX quality
@@ -491,6 +492,35 @@ def _contiguous_ranges(indices_0based: List[int]) -> List[Tuple[int, int]]:
     return ranges
 
 
+def _convert_pdf_to_docx_public_fast(pdf_path: Path, base_out_name: str) -> bytes:
+    """
+    Bounded conversion for the public free tools phase.
+    It first attempts editable conversion, then quickly falls back to a visual DOCX
+    so users do not sit at 90% for several minutes on Render Free.
+    """
+    n_pages = _pdf_page_count(pdf_path)
+    max_pages = max(1, settings.PUBLIC_PDF_TO_WORD_MAX_PAGES)
+    if n_pages > max_pages:
+        raise HTTPException(
+            status_code=413,
+            detail=f"PDF has {n_pages} pages. Free public PDF to Word currently supports up to {max_pages} pages.",
+        )
+
+    timeout_s = max(10, settings.PUBLIC_PDF_TO_WORD_TIMEOUT_SECONDS)
+    if _pdf_has_extractable_text(pdf_path) and Pdf2DocxConverter is not None:
+        try:
+            out_docx = pdf_path.parent / f"{base_out_name}_pdf2docx.docx"
+            _run_pdf2docx_convert(pdf_path, out_docx, start=None, end=None, timeout_s=timeout_s)
+            return out_docx.read_bytes()
+        except Exception:
+            pass
+
+    img_dir = pdf_path.parent / "pages_visual_fast"
+    dpi = max(96, settings.PUBLIC_PDF_RENDER_DPI)
+    page_imgs = _render_pdf_to_images(pdf_path, img_dir, dpi=dpi, preprocess_ocr=False)
+    return _visual_docx_from_images(page_imgs)
+
+
 def _convert_pdf_to_docx_best(pdf_path: Path, base_out_name: str) -> bytes:
     """
     Best-effort conversion:
@@ -640,7 +670,10 @@ async def pdf_to_word(file: UploadFile = File(...)):
         pdf_path = td / "input.pdf"
         pdf_path.write_bytes(pdf_bytes)
 
-        docx_bytes = _convert_pdf_to_docx_best(pdf_path, base_out_name=base)
+        if settings.PUBLIC_SITE_PHASE == "tools":
+            docx_bytes = _convert_pdf_to_docx_public_fast(pdf_path, base_out_name=base)
+        else:
+            docx_bytes = _convert_pdf_to_docx_best(pdf_path, base_out_name=base)
 
     return Response(
         content=docx_bytes,

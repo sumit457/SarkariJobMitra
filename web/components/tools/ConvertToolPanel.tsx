@@ -36,6 +36,9 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function errorText(err: unknown) {
+  if (err instanceof DOMException && err.name === "AbortError") {
+    return "This conversion took too long. Try a smaller PDF, or use PDF to JPG/PNG for scanned documents.";
+  }
   const message = err instanceof Error ? err.message : String(err);
   if (/networkerror|failed to fetch|load failed/i.test(message)) {
     return "Could not reach the processing server. If this is the first request, wait 30-60 seconds for the free backend to wake up and try again.";
@@ -222,7 +225,16 @@ export default function ConvertToolPanel({
         fd.append("file", files[0]);
       }
 
-      const res = await fetch(`${base}${ep}`, { method: "POST", body: fd });
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 120_000);
+
+      let res: Response;
+      try {
+        res = await fetch(`${base}${ep}`, { method: "POST", body: fd, signal: controller.signal });
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+
       if (!res.ok) throw new Error(await res.text());
 
       const blob = await res.blob();

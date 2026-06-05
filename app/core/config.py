@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     PUBLIC_SITE_PHASE: str = "tools"
     CORS_ORIGINS: str = "http://localhost:3000"
     MAX_UPLOAD_MB: int = 25
+    PUBLIC_PDF_TO_WORD_MAX_PAGES: int = 25
+    PUBLIC_PDF_TO_WORD_TIMEOUT_SECONDS: int = 45
+    PUBLIC_PDF_RENDER_DPI: int = 160
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_REQUESTS: int = 60
     RATE_LIMIT_WINDOW_SECONDS: int = 3600
