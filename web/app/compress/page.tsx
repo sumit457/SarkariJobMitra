@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandFooter, BrandHeader } from "@/components/tools/BrandChrome";
 import CompressToolPanel from "@/components/tools/CompressToolPanel";
 
 export const metadata: Metadata = {
@@ -11,5 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function CompressPage() {
-  return <CompressToolPanel />;
+  return (
+    <>
+      <BrandHeader eyebrow="Document compressor" />
+      <CompressToolPanel />
+      <BrandFooter />
+    </>
+  );
 }

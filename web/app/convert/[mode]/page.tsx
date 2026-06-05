@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { BrandFooter, BrandHeader } from "@/components/tools/BrandChrome";
 import ConvertToolPanel, { type ConvertMode } from "@/components/tools/ConvertToolPanel";
 
 const CONVERT_TOOLS: Record<
@@ -91,21 +92,25 @@ export default async function ConvertModePage({ params }: Props) {
   if (!tool) notFound();
 
   return (
-    <main>
-      <section className="mx-auto max-w-4xl px-4 pt-8 text-slate-900">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">Free online converter</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{tool.h1}</h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-700">{tool.intro}</p>
-      </section>
-      <ConvertToolPanel defaultMode={tool.mode} />
-      <section className="mx-auto max-w-4xl px-4 pb-10 text-slate-800">
-        <h2 className="text-2xl font-semibold">Tips for better results</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
-          {tool.tips.map((tip) => (
-            <li key={tip}>{tip}</li>
-          ))}
-        </ul>
-      </section>
-    </main>
+    <>
+      <BrandHeader eyebrow="Free online converter" />
+      <main>
+        <section className="mx-auto max-w-4xl px-4 pt-8 text-slate-900">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">Free online converter</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{tool.h1}</h1>
+          <p className="mt-3 max-w-3xl text-base leading-7 text-slate-700">{tool.intro}</p>
+        </section>
+        <ConvertToolPanel defaultMode={tool.mode} />
+        <section className="mx-auto max-w-4xl px-4 pb-10 text-slate-800">
+          <h2 className="text-2xl font-semibold">Tips for better results</h2>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
+            {tool.tips.map((tip) => (
+              <li key={tip}>{tip}</li>
+            ))}
+          </ul>
+        </section>
+      </main>
+      <BrandFooter />
+    </>
   );
 }

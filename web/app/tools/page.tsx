@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -74,16 +75,38 @@ function ToolsPageContent() {
         }
       >
         <div className="mx-auto max-w-[1800px] px-4 py-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className={`text-3xl font-bold tracking-tight ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>
-                Tools Workspace
-              </h1>
-              <p className={`mt-1 text-sm ${workspaceDark ? "text-slate-300" : "text-slate-700"}`}>
-                {isFocusMode
-                  ? "Focus mode: click a side tool to bring it to center."
-                  : "Use all three tools side-by-side."}
-              </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={[
+                  "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border shadow-sm",
+                  workspaceDark ? "border-slate-700 bg-white/95" : "border-white bg-white/80",
+                ].join(" ")}
+              >
+                <Image
+                  src="/brand/sarkarijobmitra-mark.png"
+                  alt="SarkariJobMitra logo"
+                  width={56}
+                  height={56}
+                  priority
+                  className="h-14 w-14 object-contain"
+                />
+              </div>
+              <div>
+                <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${workspaceDark ? "text-amber-300" : "text-amber-700"}`}>
+                  Free public tools
+                </p>
+                <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  <span className={workspaceDark ? "text-slate-100" : "text-[#06255f]"}>Sarkari</span>
+                  <span className={workspaceDark ? "text-sky-300" : "text-[#1f93c8]"}>Job</span>
+                  <span className={workspaceDark ? "text-pink-300" : "text-[#cc4d85]"}>Mitra</span>
+                </h1>
+                <p className={`mt-1 text-sm ${workspaceDark ? "text-slate-300" : "text-slate-700"}`}>
+                  {isFocusMode
+                    ? "Tools Workspace: click a side tool to bring it to center."
+                    : "Tools Workspace for image resize, document conversion, and file compression."}
+                </p>
+              </div>
             </div>
 
             <button
@@ -217,6 +240,36 @@ function ToolsPageContent() {
           </div>
         )}
       </main>
+      <footer
+        className={[
+          "border-t px-4 py-6",
+          workspaceDark ? "border-slate-800 bg-slate-950 text-slate-400" : "border-slate-200 bg-white text-slate-600",
+        ].join(" ")}
+      >
+        <div className="mx-auto flex max-w-[1800px] flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/brand/sarkarijobmitra-mark.png"
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-xl bg-white object-contain"
+            />
+            <div>
+              <p className={`font-semibold ${workspaceDark ? "text-slate-100" : "text-slate-900"}`}>
+                © 2026 SarkariJobMitra. All rights reserved.
+              </p>
+              <p className="mt-0.5">
+                Unauthorized copying, scraping, resale, or redistribution of this product and its tools is prohibited.
+              </p>
+            </div>
+          </div>
+          <p className="max-w-2xl text-xs leading-5">
+            SarkariJobMitra is an independent public utility platform and is not affiliated with any government agency,
+            recruitment board, or examination authority.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandFooter, BrandHeader } from "@/components/tools/BrandChrome";
 import ImageToolPanel from "@/components/tools/ImageToolPanel";
 
 export const metadata: Metadata = {
@@ -11,5 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function ImageToolsPage() {
-  return <ImageToolPanel />;
+  return (
+    <>
+      <BrandHeader eyebrow="Image resize tools" />
+      <ImageToolPanel />
+      <BrandFooter />
+    </>
+  );
 }

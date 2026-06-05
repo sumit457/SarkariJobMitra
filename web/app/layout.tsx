@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   description:
     "Free online tools for government exam forms: resize images to exact KB, convert PDF to Word/JPG/PNG, and compress PDF or Word files.",
   applicationName: "SarkariJobMitra Tools",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   keywords: [
     "image resize tool",
     "resize image to 20KB",

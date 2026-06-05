@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BrandFooter, BrandHeader } from "@/components/tools/BrandChrome";
 import ConvertToolPanel from "@/components/tools/ConvertToolPanel";
 
 export const metadata: Metadata = {
@@ -11,5 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function ConvertPage() {
-  return <ConvertToolPanel />;
+  return (
+    <>
+      <BrandHeader eyebrow="Document converter" />
+      <ConvertToolPanel />
+      <BrandFooter />
+    </>
+  );
 }
