@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { BrandFooter, BrandHeader } from "@/components/tools/BrandChrome";
-import ConvertToolPanel, { type ConvertMode } from "@/components/tools/ConvertToolPanel";
+import type { ConvertMode } from "@/components/tools/ConvertToolPanel";
+import { ToolsWorkspace } from "@/components/tools/ToolsWorkspace";
 
 const CONVERT_TOOLS: Record<
   string,
@@ -91,15 +93,42 @@ export default async function ConvertModePage({ params }: Props) {
   const tool = CONVERT_TOOLS[mode];
   if (!tool) notFound();
 
+  const url = `https://www.sarkarijobmitra.com/convert/${mode}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: tool.h1,
+    description: tool.description,
+    url,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Any",
+    provider: {
+      "@type": "Organization",
+      name: "SarkariJobMitra",
+      url: "https://www.sarkarijobmitra.com",
+    },
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "INR",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-amber-50">
       <BrandHeader />
       <main>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <section className="mx-auto mt-8 max-w-4xl rounded-3xl border border-sky-100 bg-white/75 px-5 py-6 text-slate-900 shadow-sm">
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{tool.h1}</h1>
           <p className="mt-3 max-w-3xl text-base leading-7 text-slate-700">{tool.intro}</p>
         </section>
-        <ConvertToolPanel defaultMode={tool.mode} />
+        <Suspense fallback={<div className="mx-auto max-w-[1800px] px-4 py-8 text-slate-700">Loading tools...</div>}>
+          <ToolsWorkspace forcedTool="convert" showChrome={false} defaultConvertMode={tool.mode} />
+        </Suspense>
         <section className="mx-auto max-w-4xl rounded-3xl border border-sky-100 bg-white/70 px-5 py-6 text-slate-800 shadow-sm">
           <h2 className="text-2xl font-semibold">Tips for better results</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-700">
